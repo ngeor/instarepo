@@ -4,6 +4,8 @@ import tempfile
 
 import requests
 
+import instarepo.git
+
 
 def main():
     args = parse_args()
@@ -78,7 +80,7 @@ class RepoProcessor:
 
     def prepare(self):
         ssh_url = self.repo["ssh_url"]
-        subprocess.run(["git", "clone", ssh_url, self.clone_dir], check=True)
+        instarepo.git.clone(ssh_url, self.clone_dir)
         subprocess.run(
             ["git", "checkout", "-b", "instarepo_branch"],
             check=True,
