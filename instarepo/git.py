@@ -1,5 +1,29 @@
 import subprocess
 
 
-def clone(ssh_url: str, clone_dir: str):
+class GitWorkingDir:
+    def __init__(self, dir):
+        self.dir = dir
+
+    def create_branch(self, name: str) -> None:
+        subprocess.run(
+            ["git", "checkout", "-b", name],
+            check=True,
+            cwd=self.dir,
+        )
+
+    def add(self, file: str) -> None:
+        subprocess.run(["git", "add", file], check=True, cwd=self.dir)
+
+    def commit(self, message: str) -> None:
+        subprocess.run(["git", "commit", "-m", message], check=True, cwd=self.dir)
+
+    def push(self) -> None:
+        subprocess.run(
+            ["git", "push", "-u", "origin", "HEAD"], check=True, cwd=self.dir
+        )
+
+
+def clone(ssh_url: str, clone_dir: str) -> GitWorkingDir:
     subprocess.run(["git", "clone", ssh_url, clone_dir], check=True)
+    return GitWorkingDir(clone_dir)

@@ -1,5 +1,4 @@
 import argparse
-import subprocess
 import tempfile
 
 import requests
@@ -68,6 +67,7 @@ class RepoProcessor:
         self.repo = repo
         self.auth = auth
         self.clone_dir = ""
+        self.git = None
 
     def process(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -80,24 +80,14 @@ class RepoProcessor:
 
     def prepare(self):
         ssh_url = self.repo["ssh_url"]
-        instarepo.git.clone(ssh_url, self.clone_dir)
-        subprocess.run(
-            ["git", "checkout", "-b", "instarepo_branch"],
-            check=True,
-            cwd=self.clone_dir,
-        )
-        print(ssh_url)
-        pass
+        self.git = instarepo.git.clone(ssh_url, self.clone_dir)
+        self.git.create_branch("instarepo_branch")
 
     def run_fixes(self):
         with open(self.clone_dir + "/test.txt", "w") as f:
             f.write("hello, world")
-        subprocess.run(["git", "add", "test.txt"], check=True, cwd=self.clone_dir)
-        subprocess.run(
-            ["git", "commit", "-m", "Adding a test.txt file"],
-            check=True,
-            cwd=self.clone_dir,
-        )
+        self.git.add("test.txt")
+        self.git.commit("Adding a test.txt file")
 
     def has_changes(self):
         return True
@@ -105,9 +95,7 @@ class RepoProcessor:
     def create_merge_request(self):
         print("Would have created PR")
         return
-        subprocess.run(
-            ["git", "push", "-u", "origin", "HEAD"], check=True, cwd=self.clone_dir
-        )
+        self.git.push()
         # https://docs.github.com/en/rest/reference/pulls#create-a-pull-request
         response = requests.post(
             f"https://api.github.com/repos/{self.repo['full_name']}/pulls",
