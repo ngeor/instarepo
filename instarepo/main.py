@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import tempfile
+from typing import Iterable
 
 import requests
 
@@ -76,11 +77,22 @@ class RepoProcessor:
 
     def process(self):
         self.prepare()
-        self.run_fixes()
+        changes = self.run_fixes()
         if self.has_changes():
-            self.create_merge_request()
+            if not changes:
+                print("WARNING: Git reports changes but the internal changes have not.")
+                print("This is likely a bug in the internal checker code.")
+            self.create_merge_request(changes)
         else:
-            print("No changes were made")
+            if changes:
+                print(
+                    "WARNING: Git does not report changes but the internal checkers have reported the following changes:"
+                )
+                for change in changes:
+                    print(change)
+                print("This is likely a bug in the internal checker code.")
+            else:
+                print("No changes were made")
 
     def prepare(self):
         self.git.create_branch(self.branch_name)
@@ -90,15 +102,20 @@ class RepoProcessor:
             f.write("hello, world")
         self.git.add("test.txt")
         self.git.commit("Adding a test.txt file")
+        return ["Adding a test.txt file"]
 
     def has_changes(self):
         current_sha = self.git.rev_parse(self.branch_name)
         main_sha = self.git.rev_parse(self.repo.default_branch)
         return current_sha != main_sha
 
-    def create_merge_request(self):
+    def create_merge_request(self, changes: Iterable[str]):
+        body = "The following fixes have been applied:\n" + "\n".join(
+            ["- " + x for x in changes]
+        )
         if self.dry_run:
             print("Would have created PR")
+            print(body)
             return
         self.git.push()
         html_url = instarepo.github.create_merge_request(
@@ -107,7 +124,7 @@ class RepoProcessor:
             self.branch_name,
             self.repo.default_branch,
             "instarepo automatic PR",
-            "The following fixes have been applied",
+            body,
         )
         print("A PR has been created: ", html_url)
 
