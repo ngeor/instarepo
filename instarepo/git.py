@@ -2,7 +2,7 @@ import subprocess
 
 
 class GitWorkingDir:
-    def __init__(self, dir):
+    def __init__(self, dir: str):
         self.dir = dir
 
     def create_branch(self, name: str) -> None:
