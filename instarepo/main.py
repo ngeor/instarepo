@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os.path
 import tempfile
 from typing import Iterable
@@ -12,6 +13,10 @@ import instarepo.repo_source
 
 def main():
     args = parse_args()
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s %(message)s",
+        level=logging.DEBUG if args.verbose else logging.INFO,
+    )
     main = Main(args)
     main.run()
 
@@ -38,6 +43,9 @@ def parse_args():
         default=False,
         help="Do not process all repositories, just one",
     )
+    parser.add_argument(
+        "--verbose", action="store_true", default=False, help="Verbose output"
+    )
     return parser.parse_args()
 
 
@@ -46,6 +54,7 @@ class Main:
         self.auth = requests.auth.HTTPBasicAuth(args.user, args.token)
         self.dry_run: bool = args.dry_run
         self.sample: bool = args.sample
+        self.verbose: bool = args.verbose
 
     def run(self):
         repos = instarepo.repo_source.get_repos(self.auth, self.sample)
@@ -53,10 +62,10 @@ class Main:
             self.process(repo)
 
     def process(self, repo: instarepo.github.Repo):
-        print("Processing ", repo.name)
+        logging.info("Processing repo %s", repo.name)
         with tempfile.TemporaryDirectory() as tmpdirname:
-            print("Cloning repo into temp dir", tmpdirname)
-            git = instarepo.git.clone(repo.ssh_url, tmpdirname)
+            logging.debug("Cloning repo into temp dir %s", tmpdirname)
+            git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
             processor = RepoProcessor(repo, self.auth, git, self.dry_run)
             processor.process()
 
@@ -80,19 +89,19 @@ class RepoProcessor:
         changes = self.run_fixes()
         if self.has_changes():
             if not changes:
-                print("WARNING: Git reports changes but the internal changes have not.")
-                print("This is likely a bug in the internal checker code.")
+                logging.warning("Git reports changes but the internal changes do not.")
+                logging.warning("This is likely a bug in the internal checker code.")
             self.create_merge_request(changes)
         else:
             if changes:
-                print(
-                    "WARNING: Git does not report changes but the internal checkers have reported the following changes:"
+                logging.warning(
+                    "Git does not report changes but the internal checkers report the following changes:"
                 )
                 for change in changes:
-                    print(change)
-                print("This is likely a bug in the internal checker code.")
+                    logging.warning(change)
+                logging.warning("This is likely a bug in the internal checker code.")
             else:
-                print("No changes were made")
+                logging.debug("No changes found for repo %s", self.repo.name)
 
     def prepare(self):
         self.git.create_branch(self.branch_name)
@@ -110,14 +119,13 @@ class RepoProcessor:
         return current_sha != main_sha
 
     def create_merge_request(self, changes: Iterable[str]):
+        if self.dry_run:
+            logging.info("Would have created PR for repo %s", self.repo.name)
+            return
+        self.git.push()
         body = "The following fixes have been applied:\n" + "\n".join(
             ["- " + x for x in changes]
         )
-        if self.dry_run:
-            print("Would have created PR")
-            print(body)
-            return
-        self.git.push()
         html_url = instarepo.github.create_merge_request(
             self.auth,
             self.repo.full_name,
@@ -126,7 +134,7 @@ class RepoProcessor:
             "instarepo automatic PR",
             body,
         )
-        print("A PR has been created: ", html_url)
+        logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
 
 
 if __name__ == "__main__":

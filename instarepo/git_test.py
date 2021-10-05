@@ -16,6 +16,20 @@ def test_clone(mocker: MockerFixture):
     assert result.dir == "/tmp/hello"
 
 
+def test_clone_quietly(mocker: MockerFixture):
+    # arrange
+    mock = mocker.patch("subprocess.run")
+
+    # act
+    result = instarepo.git.clone("ssh://hello.git", "/tmp/hello", quiet=True)
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "clone", "-q", "ssh://hello.git", "/tmp/hello"], check=True
+    )
+    assert result.dir == "/tmp/hello"
+
+
 def test_create_branch(mocker: MockerFixture):
     # arrange
     mock = mocker.patch("subprocess.run")
@@ -27,6 +41,20 @@ def test_create_branch(mocker: MockerFixture):
     # assert
     mock.assert_called_once_with(
         ["git", "checkout", "-b", "release"], check=True, cwd="/tmp/hello"
+    )
+
+
+def test_create_branch_quietly(mocker: MockerFixture):
+    # arrange
+    mock = mocker.patch("subprocess.run")
+    git = instarepo.git.GitWorkingDir("/tmp/hello", quiet=True)
+
+    # act
+    git.create_branch("release")
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "checkout", "-q", "-b", "release"], check=True, cwd="/tmp/hello"
     )
 
 
@@ -55,6 +83,20 @@ def test_commit(mocker: MockerFixture):
     # assert
     mock.assert_called_once_with(
         ["git", "commit", "-m", "oops"], check=True, cwd="/tmp/hello"
+    )
+
+
+def test_commit_quietly(mocker: MockerFixture):
+    # arrange
+    mock = mocker.patch("subprocess.run")
+    git = instarepo.git.GitWorkingDir("/tmp/hello", quiet=True)
+
+    # act
+    git.commit("oops")
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "commit", "-q", "-m", "oops"], check=True, cwd="/tmp/hello"
     )
 
 

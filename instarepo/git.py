@@ -2,12 +2,17 @@ import subprocess
 
 
 class GitWorkingDir:
-    def __init__(self, dir: str):
+    def __init__(self, dir: str, quiet: bool = False):
         self.dir = dir
+        self.quiet = quiet
 
     def create_branch(self, name: str) -> None:
+        args = ["git", "checkout"]
+        if self.quiet:
+            args.append("-q")
+        args.extend(["-b", name])
         subprocess.run(
-            ["git", "checkout", "-b", name],
+            args,
             check=True,
             cwd=self.dir,
         )
@@ -16,7 +21,11 @@ class GitWorkingDir:
         subprocess.run(["git", "add", file], check=True, cwd=self.dir)
 
     def commit(self, message: str) -> None:
-        subprocess.run(["git", "commit", "-m", message], check=True, cwd=self.dir)
+        args = ["git", "commit"]
+        if self.quiet:
+            args.append("-q")
+        args.extend(["-m", message])
+        subprocess.run(args, check=True, cwd=self.dir)
 
     def push(self) -> None:
         subprocess.run(
@@ -37,6 +46,10 @@ class GitWorkingDir:
         return result.stdout.strip()
 
 
-def clone(ssh_url: str, clone_dir: str) -> GitWorkingDir:
-    subprocess.run(["git", "clone", ssh_url, clone_dir], check=True)
-    return GitWorkingDir(clone_dir)
+def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:
+    args = ["git", "clone"]
+    if quiet:
+        args.append("-q")
+    args.extend([ssh_url, clone_dir])
+    subprocess.run(args, check=True)
+    return GitWorkingDir(clone_dir, quiet)
