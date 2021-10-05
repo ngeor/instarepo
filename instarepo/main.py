@@ -49,9 +49,7 @@ class Main:
     def run(self):
         repos = instarepo.repo_source.get_repos(self.auth, self.sample)
         for repo in repos:
-            print("Processing ", repo.name)
-            processor = RepoProcessor(repo, self.auth)
-            processor.process()
+            self.process(repo)
 
     def process(self, repo: instarepo.github.Repo):
         print("Processing ", repo.name)
@@ -74,15 +72,18 @@ class RepoProcessor:
         self.auth = auth
         self.git = git
         self.dry_run = dry_run
+        self.branch_name = "instarepo_branch"
 
     def process(self):
         self.prepare()
         self.run_fixes()
         if self.has_changes():
             self.create_merge_request()
+        else:
+            print("No changes were made")
 
     def prepare(self):
-        self.git.create_branch("instarepo_branch")
+        self.git.create_branch(self.branch_name)
 
     def run_fixes(self):
         with open(os.path.join(self.git.dir, "test.txt"), "w") as f:
@@ -91,9 +92,9 @@ class RepoProcessor:
         self.git.commit("Adding a test.txt file")
 
     def has_changes(self):
-        if self.dry_run:
-            return False
-        return True
+        current_sha = self.git.rev_parse(self.branch_name)
+        main_sha = self.git.rev_parse(self.repo.default_branch)
+        return current_sha != main_sha
 
     def create_merge_request(self):
         if self.dry_run:
@@ -103,7 +104,7 @@ class RepoProcessor:
         html_url = instarepo.github.create_merge_request(
             self.auth,
             self.repo.full_name,
-            "instarepo_branch",
+            self.branch_name,
             self.repo.default_branch,
             "instarepo automatic PR",
             "The following fixes have been applied",

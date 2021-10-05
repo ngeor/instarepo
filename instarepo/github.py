@@ -12,7 +12,7 @@ class Repo:
 
 def get_all_repos(auth):
     page = 1
-    per_page = 1  # TODO 30
+    per_page = 30
     has_more = True
     while has_more:
         count = 0
@@ -20,7 +20,7 @@ def get_all_repos(auth):
             count = count + 1
             yield repo
         page = page + 1
-        has_more = False  # TODO count >= per_page
+        has_more = count >= per_page
 
 
 def get_all_repos_of_page(auth, page: int, per_page: int):
