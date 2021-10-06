@@ -9,6 +9,7 @@ import requests
 import instarepo.git
 import instarepo.github
 import instarepo.repo_source
+import instarepo.fix
 
 
 def main():
@@ -107,11 +108,10 @@ class RepoProcessor:
         self.git.create_branch(self.branch_name)
 
     def run_fixes(self):
-        with open(os.path.join(self.git.dir, "test.txt"), "w") as f:
-            f.write("hello, world")
-        self.git.add("test.txt")
-        self.git.commit("Adding a test.txt file")
-        return ["Adding a test.txt file"]
+        fix = instarepo.fix.CompositeFix(
+            [instarepo.fix.DummyFix(self.git), instarepo.fix.ReadmeFix(self.git)]
+        )
+        return fix.run()
 
     def has_changes(self):
         current_sha = self.git.rev_parse(self.branch_name)
