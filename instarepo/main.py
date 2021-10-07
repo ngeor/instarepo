@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os.path
 import tempfile
 from typing import Iterable
 
@@ -10,6 +9,7 @@ import instarepo.git
 import instarepo.github
 import instarepo.repo_source
 import instarepo.fix
+import instarepo.fixers.readme_image
 
 
 def main():
@@ -109,7 +109,7 @@ class RepoProcessor:
 
     def run_fixes(self):
         fix = instarepo.fix.CompositeFix(
-            [instarepo.fix.DummyFix(self.git), instarepo.fix.ReadmeFix(self.git)]
+            [instarepo.fixers.readme_image.ReadmeFix(self.git)]
         )
         return fix.run()
 

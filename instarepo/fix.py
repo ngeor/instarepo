@@ -1,4 +1,5 @@
 import os.path
+
 import instarepo.git
 
 
@@ -13,26 +14,26 @@ class CompositeFix:
         return result
 
 
-class ReadmeFix:
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+class SingleFileFix:
+    def __init__(self, git: instarepo.git.GitWorkingDir, filename: str, msg: str):
         self.git = git
+        self.filename = filename
+        self.msg = msg
 
     def run(self):
-        filename = os.path.join(self.git.dir, "README.md")
+        filename = os.path.join(self.git.dir, self.filename)
         if not os.path.isfile(filename):
             return []
         with open(filename, "r") as f:
-            s = f.read()
-        return []
+            contents = f.read()
+        converted_contents = self.convert(contents)
+        if contents == converted_contents:
+            return []
+        with open(filename, "w") as f:
+            f.write(converted_contents)
+        self.git.add(self.filename)
+        self.git.commit(self.msg)
+        return [self.msg]
 
-
-class DummyFix:
-    def __init__(self, git: instarepo.git.GitWorkingDir):
-        self.git = git
-
-    def run(self):
-        with open(os.path.join(self.git.dir, "test.txt"), "w") as f:
-            f.write("hello, world")
-        self.git.add("test.txt")
-        self.git.commit("Adding a test.txt file")
-        return ["Adding a test.txt file"]
+    def convert(self, contents: str) -> str:
+        return contents
