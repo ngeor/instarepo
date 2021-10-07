@@ -21,9 +21,9 @@ class ReadmeFix(instarepo.fix.SingleFileFix):
         filename = m.group("filename")
         new_filename = self.find_new_filename(filename)
         return (
-            m.string[: m.start("filename")]
+            m.string[m.start() : m.start("filename")]
             + new_filename
-            + m.string[m.end("filename") :]
+            + m.string[m.end("filename") : m.end()]
         )
 
     def find_new_filename(self, filename: str) -> str:
