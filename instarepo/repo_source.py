@@ -6,8 +6,10 @@ import instarepo.github
 SAMPLE_SIZE = 5
 
 
-def get_repos(auth, sample=False) -> Iterable[instarepo.github.Repo]:
-    all_repos = instarepo.github.get_all_repos(auth)
+def get_repos(
+    github: instarepo.github.GitHub, sample=False
+) -> Iterable[instarepo.github.Repo]:
+    all_repos = github.get_all_repos()
     non_archived_repos = exclude_archived(all_repos)
     if sample:
         collected = []

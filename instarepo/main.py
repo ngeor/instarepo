@@ -10,6 +10,7 @@ import instarepo.github
 import instarepo.repo_source
 import instarepo.fix
 import instarepo.fixers.readme_image
+import instarepo.fixers.repo_description
 
 
 def main():
@@ -52,13 +53,20 @@ def parse_args():
 
 class Main:
     def __init__(self, args):
-        self.auth = requests.auth.HTTPBasicAuth(args.user, args.token)
+        if args.dry_run:
+            self.github = instarepo.github.GitHub(
+                auth=requests.auth.HTTPBasicAuth(args.user, args.token),
+            )
+        else:
+            self.github = instarepo.github.ReadWriteGitHub(
+                auth=requests.auth.HTTPBasicAuth(args.user, args.token),
+            )
         self.dry_run: bool = args.dry_run
         self.sample: bool = args.sample
         self.verbose: bool = args.verbose
 
     def run(self):
-        repos = instarepo.repo_source.get_repos(self.auth, self.sample)
+        repos = instarepo.repo_source.get_repos(self.github, self.sample)
         for repo in repos:
             self.process(repo)
 
@@ -67,7 +75,7 @@ class Main:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logging.debug("Cloning repo into temp dir %s", tmpdirname)
             git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
-            processor = RepoProcessor(repo, self.auth, git, self.dry_run)
+            processor = RepoProcessor(repo, self.github, git, self.dry_run)
             processor.process()
 
 
@@ -75,12 +83,12 @@ class RepoProcessor:
     def __init__(
         self,
         repo: instarepo.github.Repo,
-        auth,
+        github: instarepo.github.GitHub,
         git: instarepo.git.GitWorkingDir,
         dry_run: bool = False,
     ):
         self.repo = repo
-        self.auth = auth
+        self.github = github
         self.git = git
         self.dry_run = dry_run
         self.branch_name = "instarepo_branch"
@@ -109,7 +117,12 @@ class RepoProcessor:
 
     def run_fixes(self):
         fix = instarepo.fix.CompositeFix(
-            [instarepo.fixers.readme_image.ReadmeFix(self.git)]
+            [
+                instarepo.fixers.readme_image.ReadmeFix(self.git),
+                instarepo.fixers.repo_description.RepoDescriptionFix(
+                    self.github, self.git, self.repo
+                ),
+            ]
         )
         return fix.run()
 
@@ -126,8 +139,7 @@ class RepoProcessor:
         body = "The following fixes have been applied:\n" + "\n".join(
             ["- " + x for x in changes]
         )
-        html_url = instarepo.github.create_merge_request(
-            self.auth,
+        html_url = self.github.create_merge_request(
             self.repo.full_name,
             self.branch_name,
             self.repo.default_branch,

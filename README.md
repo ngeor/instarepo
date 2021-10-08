@@ -16,6 +16,11 @@ instarepo will:
   inside the `README.md` file of your repo. Detects only images that
   got moved from a subfolder into a parent folder (e.g. `/folder/photo.png`
   that got moved to `/photo.png`).
+- `repo_description`: Updates the description of a GitHub repository
+  based on the `README.md` file. This fixer does _not_ create a MR,
+  instead it calls GitHub's REST API directly to change the metadata
+  of the repo. The description is the first line of the README file
+  that starts with a letter or with `>`.
 
 ## Requirements
 
