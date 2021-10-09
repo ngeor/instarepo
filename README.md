@@ -7,11 +7,15 @@ CLI automation tool to apply automatic changes on multiple repositories.
 instarepo will:
 
 - clone all your GitHub repositories in a temporary local folder
-- process all repositories and apply automatic fixes
+- process all non-archived repositories and apply automatic fixes
 - create a merge request for every repository that had changes
 
 ## Fixes
 
+- `must_have_license`: Ensures the repo has a `LICENSE` file.
+  Only runs for public repositories.
+  Adds the MIT License. The copyright owner is populated by
+  `git config user.name`.
 - `must_have_readme`: Ensures the repo has a `README.md` file.
 - `readme_image`: Attempts to detect and correct broken image links
   inside the `README.md` file of your repo. Detects only images that

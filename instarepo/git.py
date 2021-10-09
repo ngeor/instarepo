@@ -45,6 +45,19 @@ class GitWorkingDir:
         )
         return result.stdout.strip()
 
+    def user_name(self) -> str:
+        """
+        Gets the `user.name` configured property.
+        """
+        result = subprocess.run(
+            ["git", "config", "user.name"],
+            check=True,
+            cwd=self.dir,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+        )
+        return result.stdout.strip()
+
 
 def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:
     args = ["git", "clone"]

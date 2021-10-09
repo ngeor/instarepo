@@ -10,6 +10,8 @@ class Repo:
         self.default_branch: str = repo_json["default_branch"]
         self.full_name: str = repo_json["full_name"]
         self.description: str = repo_json["description"]
+        self.private: bool = repo_json["private"]
+        self.fork: bool = repo_json["fork"]
 
 
 class GitHub:
