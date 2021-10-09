@@ -1,4 +1,3 @@
-import os
 import os.path
 
 import instarepo.git
@@ -18,11 +17,10 @@ class MustHaveReadmeFix:
         filename = os.path.join(self.git.dir, "README.md")
         if os.path.isfile(filename):
             return []
-        with open(filename, "w") as f:
-            f.write(f"# {self.repo.name}" + os.linesep)
-            f.write(os.linesep)
+        with open(filename, "w", encoding="utf8") as f:
+            f.write(f"# {self.repo.name}\n")
             if self.repo.description:
-                f.write(self.repo.description + os.linesep)
+                f.write("\n" + self.repo.description + "\n")
         self.git.add("README.md")
         self.git.commit("Adding README.md to repository")
         return ["Adding README.md to repository"]
