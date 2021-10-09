@@ -32,7 +32,7 @@ class RepoDescriptionFix:
         if not readme_description:
             return []
         if readme_description != self.repo.description:
-            logging.debug(
+            logging.info(
                 "Repo description %s does not match readme description %s",
                 self.repo.description,
                 readme_description,
