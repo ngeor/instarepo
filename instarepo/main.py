@@ -9,6 +9,7 @@ import instarepo.git
 import instarepo.github
 import instarepo.repo_source
 import instarepo.fix
+import instarepo.fixers.must_have_readme
 import instarepo.fixers.readme_image
 import instarepo.fixers.repo_description
 
@@ -118,6 +119,9 @@ class RepoProcessor:
     def run_fixes(self):
         fix = instarepo.fix.CompositeFix(
             [
+                instarepo.fixers.must_have_readme.MustHaveReadmeFix(
+                    self.git, self.repo
+                ),
                 instarepo.fixers.readme_image.ReadmeFix(self.git),
                 instarepo.fixers.repo_description.RepoDescriptionFix(
                     self.github, self.git, self.repo

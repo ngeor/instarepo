@@ -52,10 +52,13 @@ class RepoDescriptionFix:
             lines = [line.strip() for line in lines]
             # keep the ones that start with a letter
             lines = [line for line in lines if RE_DESCRIPTION_LINE.match(line)]
-            if lines:
-                line = lines[0]
-                if line.startswith(">"):
-                    line = line[1:].strip()
-                return line
-            else:
-                return None
+            return get_description_from_lines(lines)
+
+
+def get_description_from_lines(lines: list[str]) -> str:
+    if not lines:
+        return None
+    line = lines[0]
+    if line.startswith(">"):
+        line = line[1:].strip()
+    return line

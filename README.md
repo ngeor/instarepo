@@ -12,6 +12,7 @@ instarepo will:
 
 ## Fixes
 
+- `must_have_readme`: Ensures the repo has a `README.md` file.
 - `readme_image`: Attempts to detect and correct broken image links
   inside the `README.md` file of your repo. Detects only images that
   got moved from a subfolder into a parent folder (e.g. `/folder/photo.png`
