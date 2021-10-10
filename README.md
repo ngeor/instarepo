@@ -12,6 +12,7 @@ instarepo will:
 
 ## Fixes
 
+- `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
   Only runs for public repositories.
   Adds the MIT License. The copyright owner is populated by
