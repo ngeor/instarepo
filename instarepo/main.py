@@ -9,6 +9,7 @@ import instarepo.git
 import instarepo.github
 import instarepo.repo_source
 import instarepo.fix
+import instarepo.fixers.maven
 import instarepo.fixers.missing_files
 import instarepo.fixers.readme_image
 import instarepo.fixers.repo_description
@@ -119,6 +120,7 @@ class RepoProcessor:
     def run_fixes(self):
         fix = instarepo.fix.CompositeFix(
             [
+                instarepo.fixers.maven.MavenFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveEditorConfigFix(
                     self.git, self.repo
                 ),
@@ -142,17 +144,35 @@ class RepoProcessor:
             logging.info("Would have created PR for repo %s", self.repo.name)
             return
         self.git.push()
-        body = "The following fixes have been applied:\n" + "\n".join(
-            ["- " + x for x in changes]
-        )
         html_url = self.github.create_merge_request(
             self.repo.full_name,
             self.branch_name,
             self.repo.default_branch,
             "instarepo automatic PR",
-            body,
+            format_body(changes),
         )
         logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
+
+
+def format_body(changes: Iterable[str]) -> str:
+    body = "The following fixes have been applied:\n"
+    for change in changes:
+        lines = non_empty_lines(change)
+        first = True
+        for line in lines:
+            if first:
+                body += "- "
+                first = False
+            else:
+                body += "  "
+            body += line + "\n"
+    return body
+
+
+def non_empty_lines(s: str) -> Iterable[str]:
+    lines = s.split("\n")
+    stripped_lines = (line.strip() for line in lines)
+    return (line for line in stripped_lines if line)
 
 
 if __name__ == "__main__":

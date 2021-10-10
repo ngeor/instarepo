@@ -12,6 +12,8 @@ instarepo will:
 
 ## Fixes
 
+- `maven`: Uses the version plugin to update dependencies.
+  Requires maven to be installed.
 - `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
   Only runs for public repositories.
