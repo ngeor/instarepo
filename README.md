@@ -13,7 +13,11 @@ instarepo will:
 ## Fixes
 
 - `maven`: Uses the version plugin to update dependencies.
-  Requires maven to be installed.
+  Requires maven to be installed. Dependecies are updated with
+  [update-parent](https://www.mojohaus.org/versions-maven-plugin/update-parent-mojo.html),
+  [update-properties](https://www.mojohaus.org/versions-maven-plugin/update-properties-mojo.html),
+  and [use-latest-releases](https://www.mojohaus.org/versions-maven-plugin/use-latest-releases-mojo.html).
+  Major version updates are not allowed. Versions with patterns like `Beta` are not allowed.
 - `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
   Only runs for public repositories.
