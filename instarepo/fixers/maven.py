@@ -196,6 +196,8 @@ def filter_line(line: str) -> bool:
         "BUILD",
         "Total",
         "Finished",
+        "Minor version",
+        "Reactor "
     ]
     for deny_prefix in deny_prefixes:
         if line.startswith(deny_prefix):
