@@ -42,13 +42,18 @@ def parse_args():
         help="Do not actually push and create MR",
     )
     parser.add_argument(
-        "--sample",
-        action="store_true",
-        default=False,
-        help="Do not process all repositories, just one",
+        "--repo-prefix",
+        action="store",
+        help="Only process repositories whose name starts with the given prefix",
     )
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Verbose output"
+    )
+    parser.add_argument(
+        "--forks",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Process forks",
     )
     return parser.parse_args()
 
@@ -64,11 +69,14 @@ class Main:
                 auth=requests.auth.HTTPBasicAuth(args.user, args.token),
             )
         self.dry_run: bool = args.dry_run
-        self.sample: bool = args.sample
+        self.repo_prefix: str = args.repo_prefix
         self.verbose: bool = args.verbose
+        self.forks: bool = args.forks
 
     def run(self):
-        repos = instarepo.repo_source.get_repos(self.github, self.sample)
+        repos = instarepo.repo_source.get_repos(
+            self.github, repo_prefix=self.repo_prefix, forks=self.forks
+        )
         for repo in repos:
             self.process(repo)
 

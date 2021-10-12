@@ -49,7 +49,7 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] -u USER -t TOKEN [--dry-run] [--sample] [--verbose]
+usage: main.py [-h] -u USER -t TOKEN [--dry-run] [--repo-prefix REPO_PREFIX] [--verbose] [--forks | --no-forks]
 
 Apply changes on multiple repositories
 
@@ -59,6 +59,8 @@ optional arguments:
   -t TOKEN, --token TOKEN
                         The GitHub token
   --dry-run             Do not actually push and create MR
-  --sample              Do not process all repositories, just one
+  --repo-prefix REPO_PREFIX
+                        Only process repositories whose name starts with the given prefix
   --verbose             Verbose output
+  --forks, --no-forks   Process forks (default: True)
 ```
