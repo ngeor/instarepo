@@ -21,8 +21,11 @@ def main():
         format="%(asctime)s %(levelname)s %(message)s",
         level=logging.DEBUG if args.verbose else logging.INFO,
     )
-    main = Main(args)
-    main.run()
+    if args.subparser_name == "fix":
+        main = Main(args)
+        main.run()
+    else:
+        raise ValueError(f"Sub-parser {args.subparser_name} is not implemented")
 
 
 def parse_args():
@@ -54,6 +57,14 @@ def parse_args():
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Process forks",
+    )
+
+    subparsers = parser.add_subparsers(dest="subparser_name", help="Sub-commands help")
+    list_parser = subparsers.add_parser("list", help="Lists the available repositories")
+    fix_parser = subparsers.add_parser(
+        "fix",
+        description="Runs automatic fixes on the repositories",
+        help="Runs automatic fixes on the repositories",
     )
     return parser.parse_args()
 

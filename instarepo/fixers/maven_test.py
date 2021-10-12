@@ -1,5 +1,6 @@
 from .maven import filter_maven_output
 
+
 def test_filter_maven_output():
     output = """[INFO] Scanning for projects...
 [INFO]

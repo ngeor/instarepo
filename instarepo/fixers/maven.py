@@ -96,7 +96,7 @@ class MavenFix:
                 "-B",
                 "versions:use-latest-releases",
                 f"-Dmaven.version.rules=file://{rules}",
-                "-DallowMajorUpdates=false"
+                "-DallowMajorUpdates=false",
             ],
             cwd=self.git.dir,
             encoding="utf-8",
@@ -121,7 +121,7 @@ class MavenFix:
                 "-B",
                 "versions:update-properties",
                 f"-Dmaven.version.rules=file://{rules}",
-                "-DallowMajorUpdates=false"
+                "-DallowMajorUpdates=false",
             ],
             cwd=self.git.dir,
             encoding="utf-8",
@@ -197,7 +197,7 @@ def filter_line(line: str) -> bool:
         "Total",
         "Finished",
         "Minor version",
-        "Reactor "
+        "Reactor ",
     ]
     for deny_prefix in deny_prefixes:
         if line.startswith(deny_prefix):
