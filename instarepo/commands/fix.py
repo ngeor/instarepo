@@ -14,7 +14,7 @@ import instarepo.fixers.readme_image
 import instarepo.fixers.repo_description
 
 
-class Main:
+class FixCommand:
     def __init__(self, args):
         if args.dry_run:
             self.github = instarepo.github.GitHub(
@@ -31,7 +31,11 @@ class Main:
 
     def run(self):
         repos = instarepo.repo_source.get_repos(
-            self.github, repo_prefix=self.repo_prefix, forks=self.forks
+            self.github,
+            self.sort,
+            self.direction,
+            repo_prefix=self.repo_prefix,
+            forks=self.forks,
         )
         for repo in repos:
             self.process(repo)

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import requests
 
@@ -12,31 +13,44 @@ class Repo:
         self.description: str = repo_json["description"]
         self.private: bool = repo_json["private"]
         self.fork: bool = repo_json["fork"]
+        self.created_at = datetime.datetime.strptime(
+            repo_json["created_at"], "%Y-%m-%dT%H:%M:%S%z"
+        )
+        self.pushed_at = datetime.datetime.strptime(
+            repo_json["pushed_at"], "%Y-%m-%dT%H:%M:%S%z"
+        )
+        self.updated_at = datetime.datetime.strptime(
+            repo_json["updated_at"], "%Y-%m-%dT%H:%M:%S%z"
+        )
 
 
 class GitHub:
     def __init__(self, auth):
         self.auth = auth
 
-    def get_all_repos(self):
+    def get_all_repos(self, sort: str, direction: str):
         page = 1
         per_page = 30
         has_more = True
         while has_more:
             count = 0
-            for repo in self.get_all_repos_of_page(page, per_page):
+            for repo in self.get_all_repos_of_page(sort, direction, page, per_page):
                 count = count + 1
                 yield repo
             page = page + 1
             has_more = count >= per_page
 
-    def get_all_repos_of_page(self, page: int, per_page: int):
+    def get_all_repos_of_page(
+        self, sort: str, direction: str, page: int, per_page: int
+    ):
         # https://docs.github.com/en/rest/reference/repos#list-repositories-for-the-authenticated-user
         response = requests.get(
             "https://api.github.com/user/repos",
             auth=self.auth,
             headers={"Accept": "application/vnd.github.v3+json"},
             params={
+                "sort": sort,
+                "direction": direction,
                 "page": page,  # first page's index is 1
                 "per_page": per_page,  # Default: 30
                 "visibility": "all",  # Can be one of all, public, or private. Default: all
