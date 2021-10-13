@@ -2,7 +2,7 @@ import os.path
 import re
 
 import instarepo.git
-import instarepo.fix
+from .base import SingleFileFix
 
 # \w matches [a-zA-Z0-9_]
 RE_MARKDOWN_IMAGE = re.compile(
@@ -10,7 +10,7 @@ RE_MARKDOWN_IMAGE = re.compile(
 )
 
 
-class ReadmeFix(instarepo.fix.SingleFileFix):
+class ReadmeFix(SingleFileFix):
     """
     Finds broken images in the `README.md` file.
     Able to correct images that were moved one or more

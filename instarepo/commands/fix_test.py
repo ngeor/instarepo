@@ -1,5 +1,5 @@
 import os
-from .main import format_body
+from .fix import format_body
 
 
 def test_format_body_one_change():
