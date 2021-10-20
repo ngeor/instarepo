@@ -48,7 +48,7 @@ class GitWorkingDir:
         Gets the SHA of the given branch.
         """
         result = subprocess.run(
-            ["git", "rev-parse", branch_name],
+            ["git", "rev-parse", "-q", "--verify", branch_name],
             check=True,
             cwd=self.dir,
             encoding="utf-8",
