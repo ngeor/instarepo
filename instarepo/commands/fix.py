@@ -28,6 +28,8 @@ class FixCommand:
         self.repo_prefix: str = args.repo_prefix
         self.verbose: bool = args.verbose
         self.forks: bool = args.forks
+        self.sort = args.sort
+        self.direction = args.direction
 
     def run(self):
         repos = instarepo.repo_source.get_repos(
@@ -90,6 +92,9 @@ class RepoProcessor:
             [
                 instarepo.fixers.maven.MavenFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveEditorConfigFix(
+                    self.git, self.repo
+                ),
+                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(
                     self.git, self.repo
                 ),
                 instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),

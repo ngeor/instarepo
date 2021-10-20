@@ -1,4 +1,5 @@
 import datetime
+import os
 import os.path
 
 import instarepo.git
@@ -14,10 +15,19 @@ class MissingFileFix:
     ):
         self.git = git
         self.repo = repo
-        self.filename = filename
+        if not filename:
+            raise ValueError("filename cannot be empty")
+        parts = filename.replace('\\', '/').split('/')
+        for part in parts:
+            if not part:
+                raise ValueError(f"Found empty path segment in {filename}")
+        self.directory_parts = parts[0:-1]
+        self.filename_part = parts[-1]
 
     def run(self):
-        full_filename = os.path.join(self.git.dir, self.filename)
+        self.ensure_directories()
+        relative_filename = os.path.join(*self.directory_parts, self.filename_part)
+        full_filename = os.path.join(self.git.dir, relative_filename)
         if os.path.isfile(full_filename):
             return []
         if not self.should_process_repo():
@@ -25,8 +35,8 @@ class MissingFileFix:
         contents = self.get_contents()
         with open(full_filename, "w", encoding="utf8") as f:
             f.write(contents)
-        self.git.add(self.filename)
-        msg = "Adding " + self.filename
+        self.git.add(relative_filename)
+        msg = "Adding " + relative_filename
         self.git.commit(msg)
         return [msg]
 
@@ -35,6 +45,13 @@ class MissingFileFix:
 
     def should_process_repo(self) -> bool:
         return True
+
+    def ensure_directories(self):
+        root = self.git.dir
+        for dir in self.directory_parts:
+            root = os.path.join(root, dir)
+            if not os.path.isdir(root):
+                os.mkdir(root)
 
 
 MIT_LICENSE = """MIT License
@@ -116,3 +133,26 @@ class MustHaveEditorConfigFix(MissingFileFix):
 
     def get_contents(self):
         return EDITOR_CONFIG
+
+
+FUNDING_YML = """# These are supported funding model platforms
+
+github: # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
+patreon: # Replace with a single Patreon username
+open_collective: # Replace with a single Open Collective username
+ko_fi: # Replace with a single Ko-fi username
+tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
+community_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry
+liberapay: # Replace with a single Liberapay username
+issuehunt: # Replace with a single IssueHunt username
+otechie: # Replace with a single Otechie username
+custom: ['https://ngeor.com/support/']
+"""
+
+
+class MustHaveGitHubFundingFix(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo):
+        super().__init__(git, repo, ".github/FUNDING.yml")
+
+    def get_contents(self):
+        return FUNDING_YML
