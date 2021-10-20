@@ -85,7 +85,15 @@ class RepoProcessor:
                 logging.debug("No changes found for repo %s", self.repo.name)
 
     def prepare(self):
-        self.git.create_branch(self.branch_name)
+        remote_branch_sha = ""
+        try:
+            remote_branch_sha = self.git.rev_parse(f"remotes/origin/{self.branch_name}")
+        except:
+            pass
+        if remote_branch_sha:
+            self.git.checkout_branch(self.branch_name)
+        else:
+            self.git.create_branch(self.branch_name)
 
     def run_fixes(self):
         fix = instarepo.fixers.base.CompositeFix(

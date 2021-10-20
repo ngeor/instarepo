@@ -17,6 +17,17 @@ class GitWorkingDir:
             cwd=self.dir,
         )
 
+    def checkout_branch(self, name: str) -> None:
+        args = ["git", "checkout"]
+        if self.quiet:
+            args.append("-q")
+        args.append(name)
+        subprocess.run(
+            args,
+            check=True,
+            cwd=self.dir,
+        )
+
     def add(self, file: str) -> None:
         subprocess.run(["git", "add", file], check=True, cwd=self.dir)
 
