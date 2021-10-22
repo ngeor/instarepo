@@ -1,8 +1,64 @@
 # instarepo
 
-CLI automation tool to apply automatic changes on multiple repositories.
+CLI automation tool to batch process multiple repositories.
 
-## Overview
+## Requirements
+
+Requirements:
+
+- python 3.8+
+- pipenv
+
+Install dependencies with `pipenv install --dev`
+
+## Usage
+
+Inside a pipenv shell, run: `python -m instarepo.main`
+
+```
+$ python -m instarepo.main --help
+usage: main.py [-h] -u USER -t TOKEN [--repo-prefix REPO_PREFIX] [--verbose] [--forks | --no-forks]
+               [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+               {analyze,list,fix} ...
+
+Apply changes on multiple repositories
+
+positional arguments:
+  {analyze,list,fix}    Sub-commands help
+    analyze             Analyzes the available repositories, counting historical LOC
+    list                Lists the available repositories
+    fix                 Runs automatic fixes on the repositories
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u USER, --user USER  The GitHub username
+  -t TOKEN, --token TOKEN
+                        The GitHub token
+  --repo-prefix REPO_PREFIX
+                        Only process repositories whose name starts with the given prefix
+  --verbose             Verbose output
+  --forks, --no-forks   Process forks (default: True)
+  --sort {full_name,created,updated,pushed}
+  --direction {asc,desc}
+```
+
+## Analyze
+
+Analyzes repositories.
+
+```
+usage: main.py analyze [-h] --since SINCE [--metric {commits,files}]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --since SINCE         The start date of the analysis (YYYY-mm-dd)
+  --metric {commits,files}
+                        The metric to report on
+```
+
+## Fix
+
+Applies automatic fixes on repositories.
 
 instarepo will:
 
@@ -10,7 +66,17 @@ instarepo will:
 - process all non-archived repositories and apply automatic fixes
 - create a merge request for every repository that had changes
 
-## Fixes
+```
+usage: main.py fix [-h] [--dry-run]
+
+Runs automatic fixes on the repositories
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --dry-run   Do not actually push and create MR
+```
+
+### Fixes
 
 - `maven`: Uses the version plugin to update dependencies.
   Requires maven to be installed. Dependecies are updated with
@@ -34,33 +100,6 @@ instarepo will:
   of the repo. The description is the first line of the README file
   that starts with a letter or with `>`.
 
-## Requirements
+## List
 
-Requirements:
-
-- python 3.8+
-- pipenv
-
-Install dependencies with `pipenv install --dev`
-
-## Usage
-
-Inside a pipenv shell, run: `python -m instarepo.main`
-
-```
-$ python -m instarepo.main --help
-usage: main.py [-h] -u USER -t TOKEN [--dry-run] [--repo-prefix REPO_PREFIX] [--verbose] [--forks | --no-forks]
-
-Apply changes on multiple repositories
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -u USER, --user USER  The GitHub username
-  -t TOKEN, --token TOKEN
-                        The GitHub token
-  --dry-run             Do not actually push and create MR
-  --repo-prefix REPO_PREFIX
-                        Only process repositories whose name starts with the given prefix
-  --verbose             Verbose output
-  --forks, --no-forks   Process forks (default: True)
-```
+Lists the repositories.

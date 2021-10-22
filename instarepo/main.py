@@ -1,6 +1,7 @@
 import argparse
 import logging
 
+import instarepo.commands.analyze
 import instarepo.commands.fix
 import instarepo.commands.list
 
@@ -11,7 +12,9 @@ def main():
         format="%(asctime)s %(levelname)s %(message)s",
         level=logging.DEBUG if args.verbose else logging.INFO,
     )
-    if args.subparser_name == "fix":
+    if args.subparser_name == "analyze":
+        cmd = instarepo.commands.analyze.AnalyzeCommand(args)
+    elif args.subparser_name == "fix":
         cmd = instarepo.commands.fix.FixCommand(args)
     elif args.subparser_name == "list":
         cmd = instarepo.commands.list.ListCommand(args)
@@ -57,7 +60,22 @@ def parse_args():
     subparsers = parser.add_subparsers(
         dest="subparser_name", help="Sub-commands help", required=True
     )
-    list_parser = subparsers.add_parser("list", help="Lists the available repositories")
+
+    analyze_parser = subparsers.add_parser(
+        "analyze", help="Analyzes the available repositories, counting historical LOC"
+    )
+    analyze_parser.add_argument(
+        "--since", required=True, action="store", help="The start date of the analysis (YYYY-mm-dd)"
+    )
+    analyze_parser.add_argument(
+        "--metric",
+        choices=["commits", "files"],
+        default="commits",
+        help="The metric to report on",
+    )
+
+    subparsers.add_parser("list", help="Lists the available repositories")
+
     fix_parser = subparsers.add_parser(
         "fix",
         description="Runs automatic fixes on the repositories",
@@ -69,6 +87,7 @@ def parse_args():
         default=False,
         help="Do not actually push and create MR",
     )
+
     return parser.parse_args()
 
 

@@ -91,7 +91,7 @@ class RepoProcessor:
         except:
             pass
         if remote_branch_sha:
-            self.git.checkout_branch(self.branch_name)
+            self.git.checkout(self.branch_name)
         else:
             self.git.create_branch(self.branch_name)
 
