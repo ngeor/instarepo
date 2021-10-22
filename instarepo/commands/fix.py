@@ -105,6 +105,9 @@ class RepoProcessor:
                 instarepo.fixers.missing_files.MustHaveGitHubFundingFix(
                     self.git, self.repo
                 ),
+                instarepo.fixers.missing_files.MustHaveMavenGitHubWorkflow(
+                    self.git, self.repo
+                ),
                 instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
                 instarepo.fixers.readme_image.ReadmeFix(self.git),

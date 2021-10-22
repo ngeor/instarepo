@@ -17,7 +17,7 @@ class MissingFileFix:
         self.repo = repo
         if not filename:
             raise ValueError("filename cannot be empty")
-        parts = filename.replace('\\', '/').split('/')
+        parts = filename.replace("\\", "/").split("/")
         for part in parts:
             if not part:
                 raise ValueError(f"Found empty path segment in {filename}")
@@ -156,3 +156,43 @@ class MustHaveGitHubFundingFix(MissingFileFix):
 
     def get_contents(self):
         return FUNDING_YML
+
+
+MAVEN_YML = """# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ trunk ]
+  pull_request:
+    branches: [ trunk ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+"""
+
+
+class MustHaveMavenGitHubWorkflow(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo):
+        super().__init__(git, repo, ".github/workflows/maven.yml")
+
+    def get_contents(self):
+        return MAVEN_YML
+
+    def should_process_repo(self):
+        return os.path.isfile(os.path.join(self.git.dir, "pom.xml"))
