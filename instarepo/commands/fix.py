@@ -131,14 +131,19 @@ class RepoProcessor:
             logging.info("Would have created PR for repo %s", self.repo.name)
             return
         self.git.push()
-        html_url = self.github.create_merge_request(
-            self.repo.full_name,
-            self.branch_name,
-            self.repo.default_branch,
-            "instarepo automatic PR",
-            format_body(changes),
-        )
-        logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
+        if self.github.has_merge_request(
+            self.repo.full_name, self.branch_name, self.repo.default_branch
+        ):
+            logging.info("PR already exists for repo %s", self.repo.name)
+        else:
+            html_url = self.github.create_merge_request(
+                self.repo.full_name,
+                self.branch_name,
+                self.repo.default_branch,
+                "instarepo automatic PR",
+                format_body(changes),
+            )
+            logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
 
 
 def format_body(changes: Iterable[str]) -> str:

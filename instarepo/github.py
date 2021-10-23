@@ -71,6 +71,18 @@ class GitHub:
     def update_description(self, full_name: str, description: str):
         logging.debug("Would have set description of %s to %s", full_name, description)
 
+    def has_merge_request(self, full_name: str, head: str, base: str) -> bool:
+        # https://docs.github.com/en/rest/reference/pulls#list-pull-requests
+        response = requests.get(
+            f"https://api.github.com/repos/{full_name}/pulls",
+            auth=self.auth,
+            headers={"Accept": "application/vnd.github.v3+json"},
+            params={"head": head, "base": base},
+        )
+        result = response.json()
+        response.raise_for_status()
+        return len(result) >= 1
+
 
 class ReadWriteGitHub(GitHub):
     def __init__(self, auth):
