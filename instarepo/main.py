@@ -65,7 +65,10 @@ def parse_args():
         "analyze", help="Analyzes the available repositories, counting historical LOC"
     )
     analyze_parser.add_argument(
-        "--since", required=True, action="store", help="The start date of the analysis (YYYY-mm-dd)"
+        "--since",
+        required=True,
+        action="store",
+        help="The start date of the analysis (YYYY-mm-dd)",
     )
     analyze_parser.add_argument(
         "--metric",
