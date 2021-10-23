@@ -88,6 +88,8 @@ optional arguments:
 - `must_have_github_funding`: Adds a funding yaml for GitHub
 - `must_have_maven_github_workflow`: For projects that have a `pom.xml`, ensures a GitHub Actions workflow
   that builds the project
+- `must_have_maven_gitignore`: For Maven projects (that have a `pom.xml`), adds
+  a `.gitignore` file copied from https://github.com/github/gitignore/blob/master/Maven.gitignore
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
   Only runs for public repositories.
   Adds the MIT License. The copyright owner is populated by

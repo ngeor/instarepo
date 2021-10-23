@@ -2,6 +2,8 @@ import datetime
 import os
 import os.path
 
+import requests
+
 import instarepo.git
 import instarepo.github
 
@@ -196,3 +198,19 @@ class MustHaveMavenGitHubWorkflow(MissingFileFix):
 
     def should_process_repo(self):
         return os.path.isfile(os.path.join(self.git.dir, "pom.xml"))
+
+
+class MustHaveMavenGitIgnore(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo):
+        super().__init__(git, repo, ".gitignore")
+
+    def should_process_repo(self):
+        return os.path.isfile(os.path.join(self.git.dir, "pom.xml"))
+
+    def get_contents(self):
+        # https://github.com/github/gitignore/blob/master/Maven.gitignore
+        response = requests.get(
+            "https://raw.githubusercontent.com/github/gitignore/master/Maven.gitignore"
+        )
+        response.raise_for_status()
+        return response.text
