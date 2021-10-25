@@ -78,18 +78,10 @@ optional arguments:
 
 ### Fixes
 
-- `maven`: Uses the version plugin to update dependencies.
-  Requires maven to be installed. Dependecies are updated with
-  [update-parent](https://www.mojohaus.org/versions-maven-plugin/update-parent-mojo.html),
-  [update-properties](https://www.mojohaus.org/versions-maven-plugin/update-properties-mojo.html),
-  and [use-latest-releases](https://www.mojohaus.org/versions-maven-plugin/use-latest-releases-mojo.html).
-  Major version updates are not allowed. Versions with patterns like `Beta` are not allowed.
+#### Generic
+
 - `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
 - `must_have_github_funding`: Adds a funding yaml for GitHub
-- `must_have_maven_github_workflow`: For projects that have a `pom.xml`, ensures a GitHub Actions workflow
-  that builds the project
-- `must_have_maven_gitignore`: For Maven projects (that have a `pom.xml`), adds
-  a `.gitignore` file copied from https://github.com/github/gitignore/blob/master/Maven.gitignore
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
   Only runs for public repositories.
   Adds the MIT License. The copyright owner is populated by
@@ -104,6 +96,24 @@ optional arguments:
   instead it calls GitHub's REST API directly to change the metadata
   of the repo. The description is the first line of the README file
   that starts with a letter or with `>`.
+
+#### Dot Net
+
+- `dot_net_framework_version`: Ensures csproj and `web.config` files
+  target the desired version of .NET framework.
+
+#### Maven
+
+- `maven`: Uses the version plugin to update dependencies.
+  Requires maven to be installed. Dependecies are updated with
+  [update-parent](https://www.mojohaus.org/versions-maven-plugin/update-parent-mojo.html),
+  [update-properties](https://www.mojohaus.org/versions-maven-plugin/update-properties-mojo.html),
+  and [use-latest-releases](https://www.mojohaus.org/versions-maven-plugin/use-latest-releases-mojo.html).
+  Major version updates are not allowed. Versions with patterns like `Beta` are not allowed.
+- `must_have_maven_github_workflow`: For projects that have a `pom.xml`, ensures a GitHub Actions workflow
+  that builds the project
+- `must_have_maven_gitignore`: For Maven projects (that have a `pom.xml`), adds
+  a `.gitignore` file copied from https://github.com/github/gitignore/blob/master/Maven.gitignore
 
 ## List
 

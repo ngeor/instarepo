@@ -8,6 +8,7 @@ import instarepo.git
 import instarepo.github
 import instarepo.repo_source
 import instarepo.fixers.base
+import instarepo.fixers.dotnet
 import instarepo.fixers.maven
 import instarepo.fixers.missing_files
 import instarepo.fixers.readme_image
@@ -98,6 +99,9 @@ class RepoProcessor:
     def run_fixes(self):
         fix = instarepo.fixers.base.CompositeFix(
             [
+                instarepo.fixers.dotnet.DotNetFrameworkVersionFix(
+                    self.git, self.repo
+                ),
                 instarepo.fixers.maven.MavenFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveEditorConfigFix(
                     self.git, self.repo
