@@ -101,6 +101,7 @@ optional arguments:
 
 - `dot_net_framework_version`: Ensures csproj and `web.config` files
   target the desired version of .NET framework.
+- `must_have_csharp_app_veyor`: Adds an `appveyor.yml` file to .NET C# solutions.
 
 #### Maven
 

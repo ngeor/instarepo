@@ -99,22 +99,13 @@ class RepoProcessor:
     def run_fixes(self):
         fix = instarepo.fixers.base.CompositeFix(
             [
-                instarepo.fixers.dotnet.DotNetFrameworkVersionFix(
-                    self.git, self.repo
-                ),
-                instarepo.fixers.maven.MavenFix(self.git, self.repo),
-                instarepo.fixers.missing_files.MustHaveEditorConfigFix(
-                    self.git, self.repo
-                ),
-                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(
-                    self.git, self.repo
-                ),
-                instarepo.fixers.missing_files.MustHaveMavenGitHubWorkflow(
-                    self.git, self.repo
-                ),
-                instarepo.fixers.missing_files.MustHaveMavenGitIgnore(
-                    self.git, self.repo
-                ),
+                instarepo.fixers.dotnet.DotNetFrameworkVersionFix(self.git),
+                instarepo.fixers.maven.MavenFix(self.git),
+                instarepo.fixers.missing_files.MustHaveEditorConfigFix(self.git),
+                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(self.git),
+                instarepo.fixers.missing_files.MustHaveMavenGitHubWorkflow(self.git),
+                instarepo.fixers.missing_files.MustHaveMavenGitIgnore(self.git),
+                instarepo.fixers.missing_files.MustHaveCSharpAppVeyor(self.git),
                 instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
                 instarepo.fixers.readme_image.ReadmeFix(self.git),

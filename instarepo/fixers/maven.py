@@ -7,17 +7,14 @@ import xml.etree.ElementTree as ET
 import requests
 
 import instarepo.git
-import instarepo.github
 
 
 class MavenFix:
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,
-        repo: instarepo.github.Repo,
     ):
         self.git = git
-        self.repo = repo
         self._commits: list[str] = []
         self._full_filename: str = None
 

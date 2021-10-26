@@ -4,17 +4,14 @@ import os.path
 import xml.etree.ElementTree as ET
 
 import instarepo.git
-import instarepo.github
 
 
 class DotNetFrameworkVersionFix:
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,
-        repo: instarepo.github.Repo,
     ):
         self.git = git
-        self.repo = repo
         self.result = []
 
     def run(self):
