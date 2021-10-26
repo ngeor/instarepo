@@ -4,6 +4,31 @@ import os.path
 import xml.etree.ElementTree as ET
 
 import instarepo.git
+from instarepo.fixers.base import MissingFileFix
+
+
+def is_csharp_project(dir: str) -> bool:
+    """
+    Checks if the given directory is a C# project.
+    The directory must have a .sln file which references at least one C# project.
+    """
+    with os.scandir(dir) as it:
+        for entry in it:
+            if entry.name.endswith(".sln") and entry.is_file():
+                return is_csharp_solution(entry.path)
+    return False
+
+
+def is_csharp_solution(sln_file: str) -> bool:
+    """
+    Checks if the given sln file references C# projects.
+    """
+    with open(sln_file, "r") as f:
+        lines = f.readlines()
+        # e.g. Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVRender", "CVRender\CVRender.csproj", "{BD17C766-DF9E-4117-A8CB-2BAA8FE6D9B9}"
+        project_lines = [line for line in lines if line.startswith("Project(")]
+        cs_proj_lines = [line for line in project_lines if ".csproj" in line]
+        return len(cs_proj_lines) > 0
 
 
 class DotNetFrameworkVersionFix:
@@ -95,3 +120,25 @@ class DotNetFrameworkVersionFix:
         msg = f"Upgraded {relpath} to .NET {desired_framework_version}"
         self.git.commit(msg)
         self.result.append(msg)
+
+
+class MustHaveCSharpAppVeyor(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir):
+        super().__init__(git, "appveyor.yml")
+
+    def should_process_repo(self):
+        return is_csharp_project(self.git.dir)
+
+    def get_contents(self):
+        return """version: 1.0.{build}
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+before_build:
+- nuget restore
+build:
+  verbosity: minimal
+"""

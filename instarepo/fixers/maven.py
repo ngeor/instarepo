@@ -7,6 +7,14 @@ import xml.etree.ElementTree as ET
 import requests
 
 import instarepo.git
+from instarepo.fixers.base import MissingFileFix
+
+
+def is_maven_project(dir: str) -> bool:
+    """
+    Checks if the given directory is a Maven project.
+    """
+    return os.path.isfile(os.path.join(dir, "pom.xml"))
 
 
 class MavenFix:
@@ -19,10 +27,9 @@ class MavenFix:
         self._full_filename: str = None
 
     def run(self):
-        self._full_filename = os.path.join(self.git.dir, "pom.xml")
-        if not os.path.isfile(self._full_filename):
+        if not is_maven_project(self.git.dir):
             return []
-
+        self._full_filename = os.path.join(self.git.dir, "pom.xml")
         self._commits = []
         self.remove_snapshot_parent_pom()
         self.run_step("Using latest releases", self.use_latest_releases)
@@ -213,3 +220,59 @@ def get_latest_artifact_version(group_id: str, artifact_id: str) -> str:
     versioning = root.find("versioning")
     release = versioning.find("release")
     return release.text
+
+
+MAVEN_YML = """# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ trunk ]
+  pull_request:
+    branches: [ trunk ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+"""
+
+
+class MustHaveMavenGitHubWorkflow(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir):
+        super().__init__(git, ".github/workflows/maven.yml")
+
+    def should_process_repo(self):
+        return is_maven_project(self.git.dir)
+
+    def get_contents(self):
+        return MAVEN_YML
+
+
+class MustHaveMavenGitIgnore(MissingFileFix):
+    def __init__(self, git: instarepo.git.GitWorkingDir):
+        super().__init__(git, ".gitignore")
+
+    def should_process_repo(self):
+        return is_maven_project(self.git.dir)
+
+    def get_contents(self):
+        # https://github.com/github/gitignore/blob/master/Maven.gitignore
+        response = requests.get(
+            "https://raw.githubusercontent.com/github/gitignore/master/Maven.gitignore"
+        )
+        response.raise_for_status()
+        return response.text
