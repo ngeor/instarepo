@@ -116,6 +116,13 @@ optional arguments:
 - `must_have_maven_gitignore`: For Maven projects (that have a `pom.xml`), adds
   a `.gitignore` file copied from https://github.com/github/gitignore/blob/master/Maven.gitignore
 
+#### Pascal
+
+- `autoformat`: Autoformats Pascal source code with [JEDI Code Format](http://jedicodeformat.sourceforge.net/).
+  Prerequisites:
+  - The `JFC.exe` is located at `C:\opt\jcf_243_exe\JCF.exe`
+  - The configuration file is located at `%LOCALAPPDATA%\lazarus\jcfsettings.cfg`
+
 ## List
 
 Lists the repositories.

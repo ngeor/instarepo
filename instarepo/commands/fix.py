@@ -11,6 +11,7 @@ import instarepo.fixers.base
 import instarepo.fixers.dotnet
 import instarepo.fixers.maven
 import instarepo.fixers.missing_files
+import instarepo.fixers.pascal
 import instarepo.fixers.readme_image
 import instarepo.fixers.repo_description
 
@@ -108,6 +109,7 @@ class RepoProcessor:
                 instarepo.fixers.missing_files.MustHaveGitHubFundingFix(self.git),
                 instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
+                instarepo.fixers.pascal.AutoFormat(self.git),
                 instarepo.fixers.readme_image.ReadmeFix(self.git),
                 instarepo.fixers.repo_description.RepoDescriptionFix(
                     self.github, self.git, self.repo
