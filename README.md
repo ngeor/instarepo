@@ -122,6 +122,7 @@ optional arguments:
   Prerequisites:
   - The `JFC.exe` is located at `C:\opt\jcf_243_exe\JCF.exe`
   - The configuration file is located at `%LOCALAPPDATA%\lazarus\jcfsettings.cfg`
+- `must_have_lazarus_gitignore`: For Lazarus projects, adds a `.gitignore` file
 
 ## List
 

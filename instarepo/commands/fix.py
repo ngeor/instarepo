@@ -110,6 +110,7 @@ class RepoProcessor:
                 instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
                 instarepo.fixers.pascal.AutoFormat(self.git),
+                instarepo.fixers.pascal.MustHaveLazarusGitIgnore(self.git),
                 instarepo.fixers.readme_image.ReadmeFix(self.git),
                 instarepo.fixers.repo_description.RepoDescriptionFix(
                     self.github, self.git, self.repo
