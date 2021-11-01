@@ -9,6 +9,7 @@ import instarepo.github
 import instarepo.repo_source
 import instarepo.fixers.base
 import instarepo.fixers.dotnet
+import instarepo.fixers.license
 import instarepo.fixers.maven
 import instarepo.fixers.missing_files
 import instarepo.fixers.pascal
@@ -102,12 +103,13 @@ class RepoProcessor:
             [
                 instarepo.fixers.dotnet.DotNetFrameworkVersionFix(self.git),
                 instarepo.fixers.dotnet.MustHaveCSharpAppVeyor(self.git),
+                instarepo.fixers.license.CopyrightYearFix(self.git, self.repo),
+                instarepo.fixers.license.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.maven.MavenFix(self.git),
                 instarepo.fixers.maven.MustHaveMavenGitIgnore(self.git),
                 instarepo.fixers.maven.MustHaveMavenGitHubWorkflow(self.git),
                 instarepo.fixers.missing_files.MustHaveEditorConfigFix(self.git),
                 instarepo.fixers.missing_files.MustHaveGitHubFundingFix(self.git),
-                instarepo.fixers.missing_files.MustHaveLicenseFix(self.git, self.repo),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
                 instarepo.fixers.pascal.AutoFormat(self.git),
                 instarepo.fixers.pascal.MustHaveLazarusGitIgnore(self.git),

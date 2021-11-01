@@ -80,6 +80,7 @@ optional arguments:
 
 #### Generic
 
+- `copyright_year`: Updates the copyright year in `LICENSE` file.
 - `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
 - `must_have_github_funding`: Adds a funding yaml for GitHub
 - `must_have_license`: Ensures the repo has a `LICENSE` file.
