@@ -15,6 +15,7 @@ import instarepo.fixers.missing_files
 import instarepo.fixers.pascal
 import instarepo.fixers.readme_image
 import instarepo.fixers.repo_description
+import instarepo.fixers.vb6
 
 
 class FixCommand:
@@ -117,6 +118,7 @@ class RepoProcessor:
                 instarepo.fixers.repo_description.RepoDescriptionFix(
                     self.github, self.git, self.repo
                 ),
+                instarepo.fixers.vb6.MustHaveVB6GitIgnore(self.git),
             ]
         )
         return fix.run()
