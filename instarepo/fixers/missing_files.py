@@ -59,8 +59,12 @@ custom: ['https://ngeor.com/support/']
 
 
 class MustHaveGitHubFundingFix(MissingFileFix):
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+    def __init__(self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo):
         super().__init__(git, ".github/FUNDING.yml")
+        self.repo = repo
+
+    def should_process_repo(self):
+        return not self.repo.private and not self.repo.fork
 
     def get_contents(self):
         return FUNDING_YML

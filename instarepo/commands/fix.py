@@ -110,7 +110,9 @@ class RepoProcessor:
                 instarepo.fixers.maven.MustHaveMavenGitIgnore(self.git),
                 instarepo.fixers.maven.MustHaveMavenGitHubWorkflow(self.git),
                 instarepo.fixers.missing_files.MustHaveEditorConfigFix(self.git),
-                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(self.git),
+                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(
+                    self.git, self.repo
+                ),
                 instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
                 instarepo.fixers.pascal.AutoFormat(self.git),
                 instarepo.fixers.pascal.MustHaveLazarusGitIgnore(self.git),
