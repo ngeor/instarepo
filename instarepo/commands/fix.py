@@ -28,21 +28,17 @@ class FixCommand:
             self.github = instarepo.github.ReadWriteGitHub(
                 auth=requests.auth.HTTPBasicAuth(args.user, args.token),
             )
+        self.repo_source = (
+            instarepo.repo_source.RepoSourceBuilder()
+            .with_github(self.github)
+            .with_args(args)
+            .build()
+        )
         self.dry_run: bool = args.dry_run
-        self.repo_prefix: str = args.repo_prefix
         self.verbose: bool = args.verbose
-        self.forks: bool = args.forks
-        self.sort = args.sort
-        self.direction = args.direction
 
     def run(self):
-        repos = instarepo.repo_source.get_repos(
-            self.github,
-            self.sort,
-            self.direction,
-            repo_prefix=self.repo_prefix,
-            forks=self.forks,
-        )
+        repos = self.repo_source.get()
         for repo in repos:
             self.process(repo)
 

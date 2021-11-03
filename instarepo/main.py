@@ -43,9 +43,10 @@ def parse_args():
     )
     parser.add_argument(
         "--forks",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Process forks",
+        action="store",
+        default="deny",
+        choices=["allow", "deny", "only"],
+        help="Filter forks",
     )
     parser.add_argument(
         "--sort",
@@ -76,8 +77,22 @@ def parse_args():
         default="commits",
         help="The metric to report on",
     )
+    analyze_parser.add_argument(
+        "--archived",
+        action="store",
+        default="deny",
+        choices=["allow", "deny", "only"],
+        help="Filter archived repositories",
+    )
 
-    subparsers.add_parser("list", help="Lists the available repositories")
+    list_parser = subparsers.add_parser("list", help="Lists the available repositories")
+    list_parser.add_argument(
+        "--archived",
+        action="store",
+        default="deny",
+        choices=["allow", "deny", "only"],
+        help="Filter archived repositories",
+    )
 
     fix_parser = subparsers.add_parser(
         "fix",

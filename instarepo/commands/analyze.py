@@ -3,8 +3,6 @@ import os
 import tempfile
 from datetime import date, datetime
 
-import requests
-
 import instarepo.git
 import instarepo.github
 import instarepo.repo_source
@@ -12,14 +10,10 @@ import instarepo.repo_source
 
 class AnalyzeCommand:
     def __init__(self, args):
-        self.github = instarepo.github.GitHub(
-            auth=requests.auth.HTTPBasicAuth(args.user, args.token),
+        self.repo_source = (
+            instarepo.repo_source.RepoSourceBuilder().with_args(args).build()
         )
-        self.repo_prefix: str = args.repo_prefix
         self.verbose: bool = args.verbose
-        self.forks: bool = args.forks
-        self.sort = args.sort
-        self.direction = args.direction
         # TODO find date of oldest commit:
         # $ git show -s --format=%ci $(git rev-list --max-parents=0 HEAD) | cut -d' ' -f1
         # 2017-02-18
@@ -27,13 +21,7 @@ class AnalyzeCommand:
         self.metric: str = args.metric
 
     def run(self):
-        repos = instarepo.repo_source.get_repos(
-            self.github,
-            self.sort,
-            self.direction,
-            repo_prefix=self.repo_prefix,
-            forks=self.forks,
-        )
+        repos = self.repo_source.get()
         for repo in repos:
             self.process(repo)
 

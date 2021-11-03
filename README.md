@@ -17,7 +17,7 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] -u USER -t TOKEN [--repo-prefix REPO_PREFIX] [--verbose] [--forks | --no-forks]
+usage: main.py [-h] -u USER -t TOKEN [--repo-prefix REPO_PREFIX] [--verbose] [--forks {allow,deny,only}]
                [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
                {analyze,list,fix} ...
 
@@ -37,7 +37,8 @@ optional arguments:
   --repo-prefix REPO_PREFIX
                         Only process repositories whose name starts with the given prefix
   --verbose             Verbose output
-  --forks, --no-forks   Process forks (default: True)
+  --forks {allow,deny,only}
+                        Filter forks
   --sort {full_name,created,updated,pushed}
   --direction {asc,desc}
 ```
@@ -45,6 +46,8 @@ optional arguments:
 ## Analyze
 
 Analyzes repositories.
+
+By default, skips forks and archived repositories.
 
 ```
 usage: main.py analyze [-h] --since SINCE [--metric {commits,files}]
@@ -54,6 +57,8 @@ optional arguments:
   --since SINCE         The start date of the analysis (YYYY-mm-dd)
   --metric {commits,files}
                         The metric to report on
+  --archived {allow,deny,only}
+                        Filter archived repositories
 ```
 
 ## Fix
@@ -65,6 +70,8 @@ instarepo will:
 - clone all your GitHub repositories in a temporary local folder
 - process all non-archived repositories and apply automatic fixes
 - create a merge request for every repository that had changes
+
+By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
 usage: main.py fix [-h] [--dry-run]
@@ -133,3 +140,14 @@ optional arguments:
 ## List
 
 Lists the repositories.
+
+By default, skips forks and archived repositories.
+
+```
+usage: main.py list [-h] [--archived {allow,deny,only}]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --archived {allow,deny,only}
+                        Filter archived repositories
+```
