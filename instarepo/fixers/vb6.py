@@ -10,9 +10,13 @@ def is_vb6_project(dir: str) -> bool:
     """
     with os.scandir(dir) as it:
         for entry in it:
-            if entry.name.endswith(".vbp") and entry.is_file():
+            if entry.is_file() and has_vb6_extension(entry):
                 return True
     return False
+
+
+def has_vb6_extension(entry):
+    return entry.name.endswith(".vbp") or entry.name.endswith(".vbg")
 
 
 VB6_GITIGNORE = """*.exe

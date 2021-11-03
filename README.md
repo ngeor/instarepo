@@ -125,6 +125,11 @@ optional arguments:
   - The configuration file is located at `%LOCALAPPDATA%\lazarus\jcfsettings.cfg`
 - `must_have_lazarus_gitignore`: For Lazarus projects, adds a `.gitignore` file
 
+#### VB6
+
+- `must_have_vb6_gitignore`: For Visual Basic projects and project groups,
+  adds a `.gitignore` file
+
 ## List
 
 Lists the repositories.
