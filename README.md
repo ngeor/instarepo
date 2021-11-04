@@ -17,8 +17,10 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] -u USER -t TOKEN [--repo-prefix REPO_PREFIX] [--verbose] [--forks {allow,deny,only}]
-               [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+usage: main.py [-h] [--verbose] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+               [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+               [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+               [--forks {allow,deny,only}]
                {analyze,list,fix} ...
 
 Apply changes on multiple repositories
@@ -31,16 +33,28 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --verbose             Verbose output
+  --only-language ONLY_LANGUAGE
+                        Only process repositories of the given programming language
+  --except-language EXCEPT_LANGUAGE
+                        Do not process repositories of the given programming language
+  --only-name-prefix ONLY_NAME_PREFIX
+                        Only process repositories whose name starts with the given prefix
+  --except-name-prefix EXCEPT_NAME_PREFIX
+                        Do not process repositories whose name starts with the given prefix
+
+Authentication:
   -u USER, --user USER  The GitHub username
   -t TOKEN, --token TOKEN
                         The GitHub token
-  --repo-prefix REPO_PREFIX
-                        Only process repositories whose name starts with the given prefix
-  --verbose             Verbose output
-  --forks {allow,deny,only}
-                        Filter forks
+
+Sorting:
   --sort {full_name,created,updated,pushed}
   --direction {asc,desc}
+
+Filtering:
+  --forks {allow,deny,only}
+                        Filter forks
 ```
 
 ## Analyze

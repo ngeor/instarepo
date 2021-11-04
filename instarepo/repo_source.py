@@ -1,8 +1,8 @@
 from typing import Iterable
 from enum import Enum, auto, unique
 
-import instarepo.github
 import requests
+import instarepo.github
 
 
 @unique
@@ -19,6 +19,24 @@ class FilterMode(Enum):
     DENY = auto()
     ONLY = auto()
 
+    @staticmethod
+    def parse(value: str):
+        return [member for member in FilterMode if member.name == value][0]
+
+
+class StringFilter:
+    """
+    Defines a string filter.
+    Allows filtering repositories based on a string property.
+    The combination of `value` and `mode` allows to
+    include or exclude repositories based on the value of
+    the property that is being filtered on.
+    """
+
+    def __init__(self, value: str = "", mode: FilterMode = FilterMode.ALLOW):
+        self.value = value
+        self.mode = mode
+
 
 class RepoSource:
     """
@@ -32,7 +50,8 @@ class RepoSource:
         direction: str,
         archived: FilterMode,
         forks: FilterMode,
-        repo_prefix: str,
+        repo_prefix: StringFilter,
+        language: StringFilter,
     ):
         """
         Creates an instance of this class
@@ -45,6 +64,7 @@ class RepoSource:
         :param archived: Determines how to filter archived repositories
         :param forks: Determines how to filter forks
         :param repo_prefix: Optionally filter repositories whose name starts with this prefix
+        :param language: Optionally filter repositories by their language
         """
         self.github = github
         self.sort = sort
@@ -52,15 +72,18 @@ class RepoSource:
         self.archived = archived
         self.forks = forks
         self.repo_prefix = repo_prefix
+        self.language = language
 
     def get(self) -> Iterable[instarepo.github.Repo]:
         """
         Retrieves repository information from GitHub.
         """
-        return self._filter_prefix(
-            self._filter_forks(
-                self._filter_archived(
-                    self.github.get_all_repos(self.sort, self.direction)
+        return self._filter_language(
+            self._filter_prefix(
+                self._filter_forks(
+                    self._filter_archived(
+                        self.github.get_all_repos(self.sort, self.direction)
+                    )
                 )
             )
         )
@@ -82,10 +105,10 @@ class RepoSource:
             return repos
 
     def _filter_prefix(self, repos: Iterable[instarepo.github.Repo]):
-        if self.repo_prefix:
-            return (repo for repo in repos if repo.name.startswith(self.repo_prefix))
-        else:
-            return repos
+        return filter_by_name_prefix(repos, self.repo_prefix)
+
+    def _filter_language(self, repos: Iterable[instarepo.github.Repo]):
+        return filter_by_language(repos, self.language)
 
 
 class RepoSourceBuilder:
@@ -103,7 +126,8 @@ class RepoSourceBuilder:
         self.direction = None
         self.archived = FilterMode.DENY
         self.forks = FilterMode.DENY
-        self.repo_prefix = None
+        self.repo_prefix = StringFilter()
+        self.language = StringFilter()
 
     def with_github(self, github: instarepo.github.GitHub):
         """
@@ -126,20 +150,28 @@ class RepoSourceBuilder:
             )
         self.sort = args.sort
         self.direction = args.direction
-        self.forks = [
-            member for member in FilterMode if member.name == args.forks.upper()
-        ][0]
+        self.forks = FilterMode.parse(args.forks.upper())
         if "archived" in args:
-            self.archived = [
-                member for member in FilterMode if member.name == args.archived.upper()
-            ][0]
-        self.repo_prefix = args.repo_prefix
+            self.archived = FilterMode.parse(args.archived.upper())
+
+        if args.only_name_prefix:
+            self.repo_prefix = StringFilter(args.only_name_prefix, FilterMode.ONLY)
+        elif args.except_name_prefix:
+            self.repo_prefix = StringFilter(args.except_name_prefix, FilterMode.DENY)
+
+        if args.only_language:
+            self.language = StringFilter(args.only_language, FilterMode.ONLY)
+        elif args.except_language:
+            self.language = StringFilter(args.except_language, FilterMode.DENY)
+
         return self
 
     def build(self):
         """
         Builds a new `RepoSource` instance.
         """
+        if self.github is None:
+            raise ValueError("GitHub client is mandatory")
         return RepoSource(
             self.github,
             self.sort,
@@ -147,4 +179,41 @@ class RepoSourceBuilder:
             self.archived,
             self.forks,
             self.repo_prefix,
+            self.language,
         )
+
+
+def filter_by_name_prefix(
+    repos: Iterable[instarepo.github.Repo], string_filter: StringFilter
+) -> Iterable[instarepo.github.Repo]:
+    if (
+        not string_filter
+        or not string_filter.value
+        or string_filter.mode == FilterMode.ALLOW
+    ):
+        return repos
+    if string_filter.mode == FilterMode.ONLY:
+        return (repo for repo in repos if repo.name.startswith(string_filter.value))
+    elif string_filter.mode == FilterMode.DENY:
+        return (repo for repo in repos if not repo.name.startswith(string_filter.value))
+    else:
+        raise ValueError("Invalid filter mode " + string_filter.mode)
+
+
+def filter_by_language(
+    repos: Iterable[instarepo.github.Repo], string_filter: StringFilter
+) -> Iterable[instarepo.github.Repo]:
+    if not string_filter or string_filter.mode == FilterMode.ALLOW:
+        return repos
+    if string_filter.mode == FilterMode.ONLY:
+        if string_filter.value:
+            return (repo for repo in repos if repo.language == string_filter.value)
+        else:
+            return (repo for repo in repos if not repo.language)
+    elif string_filter.mode == FilterMode.DENY:
+        if string_filter.value:
+            return (repo for repo in repos if repo.language != string_filter.value)
+        else:
+            return (repo for repo in repos if repo.language)
+    else:
+        raise ValueError("Invalid filter mode " + string_filter.mode)

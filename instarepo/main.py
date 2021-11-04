@@ -28,34 +28,60 @@ def parse_args():
         description="Apply changes on multiple repositories"
     )
     parser.add_argument(
-        "-u", "--user", action="store", required=True, help="The GitHub username"
-    )
-    parser.add_argument(
-        "-t", "--token", action="store", required=True, help="The GitHub token"
-    )
-    parser.add_argument(
-        "--repo-prefix",
-        action="store",
-        help="Only process repositories whose name starts with the given prefix",
-    )
-    parser.add_argument(
         "--verbose", action="store_true", default=False, help="Verbose output"
     )
-    parser.add_argument(
-        "--forks",
-        action="store",
-        default="deny",
-        choices=["allow", "deny", "only"],
-        help="Filter forks",
+
+    auth_group = parser.add_argument_group("Authentication")
+    auth_group.add_argument(
+        "-u", "--user", action="store", required=True, help="The GitHub username"
     )
-    parser.add_argument(
+    auth_group.add_argument(
+        "-t", "--token", action="store", required=True, help="The GitHub token"
+    )
+
+    sort_group = parser.add_argument_group("Sorting")
+    sort_group.add_argument(
         "--sort",
         action="store",
         default="full_name",
         choices=["full_name", "created", "updated", "pushed"],
     )
-    parser.add_argument(
+    sort_group.add_argument(
         "--direction", action="store", default="asc", choices=["asc", "desc"]
+    )
+
+    language_group = parser.add_mutually_exclusive_group()
+    language_group.add_argument(
+        "--only-language",
+        action="store",
+        help="Only process repositories of the given programming language",
+    )
+    language_group.add_argument(
+        "--except-language",
+        action="store",
+        help="Do not process repositories of the given programming language",
+    )
+
+    prefix_group = parser.add_mutually_exclusive_group()
+    prefix_group.add_argument(
+        "--only-name-prefix",
+        action="store",
+        help="Only process repositories whose name starts with the given prefix",
+    )
+    prefix_group.add_argument(
+        "--except-name-prefix",
+        action="store",
+        help="Do not process repositories whose name starts with the given prefix",
+    )
+
+    filter_group = parser.add_argument_group("Filtering")
+
+    filter_group.add_argument(
+        "--forks",
+        action="store",
+        default="deny",
+        choices=["allow", "deny", "only"],
+        help="Filter forks",
     )
 
     subparsers = parser.add_subparsers(

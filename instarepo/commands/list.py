@@ -9,7 +9,7 @@ class ListCommand:
         )
 
     def run(self):
-        print("repo", "updated at")
+        print("repo", "language", "updated at")
         repos = self.repo_source.get()
         for repo in repos:
-            print(repo.name, repo.updated_at)
+            print(repo.name, repo.language, repo.updated_at)

@@ -22,6 +22,7 @@ class Repo:
         self.updated_at = datetime.datetime.strptime(
             repo_json["updated_at"], "%Y-%m-%dT%H:%M:%S%z"
         )
+        self.language: str = repo_json["language"]
 
 
 class GitHub:
