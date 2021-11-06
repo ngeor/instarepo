@@ -1,0 +1,68 @@
+"""
+Unit tests for main.py
+"""
+
+import pytest
+
+from .main import create_command, parse_args
+from .commands.analyze import AnalyzeCommand
+from .commands.fix import FixCommand
+from .commands.list import ListCommand
+
+
+def test_parse_args_empty():
+    """Empty arguments should throw error"""
+    with pytest.raises(SystemExit):
+        parse_args(args=[])
+
+
+def test_parse_args_list_minimal():
+    """Minimal list command parse"""
+    result = parse_args(args=["list", "-u", "jdoe", "-t", "secret"])
+    assert result.user == "jdoe"
+    assert result.token == "secret"
+    assert result.subparser_name == "list"
+
+
+def test_parse_args_list_archived():
+    """Tests the archived flag"""
+    result = parse_args(args=["list", "-u", "jdoe", "-t", "secret"])
+    assert result.archived == "deny"
+    for valid_option in ["allow", "deny", "only"]:
+        result = parse_args(
+            args=["list", "-u", "jdoe", "-t", "secret", "--archived", valid_option]
+        )
+        assert result.archived == valid_option
+    with pytest.raises(SystemExit):
+        parse_args(args=["list", "-u", "jdoe", "-t", "secret", "--archived", "oops"])
+
+
+def test_parse_args_fix_minimal():
+    """Minimal fix command parse"""
+    result = parse_args(args=["fix", "-u", "x", "--token", "sesame"])
+    assert result.user == "x"
+    assert result.token == "sesame"
+    assert result.subparser_name == "fix"
+
+
+def test_create_command_list():
+    """Create ListCommand"""
+    args = parse_args(args=["list", "-u", "jdoe", "-t", "secret"])
+    cmd = create_command(args)
+    assert isinstance(cmd, ListCommand)
+
+
+def test_create_command_fix():
+    """Create FixCommand"""
+    args = parse_args(args=["fix", "-u", "jdoe", "-t", "secret"])
+    cmd = create_command(args)
+    assert isinstance(cmd, FixCommand)
+
+
+def test_create_command_analyze():
+    """Create AnalyzeCommand"""
+    args = parse_args(
+        args=["analyze", "-u", "jdoe", "-t", "secret", "--since", "2021-11-06"]
+    )
+    cmd = create_command(args)
+    assert isinstance(cmd, AnalyzeCommand)

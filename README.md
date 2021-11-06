@@ -17,23 +17,35 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] [--verbose] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
-               [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-               [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-               [--forks {allow,deny,only}]
-               {analyze,list,fix} ...
+usage: main.py [-h] [--verbose] {list,fix,analyze} ...
 
 Apply changes on multiple repositories
 
 positional arguments:
-  {analyze,list,fix}    Sub-commands help
-    analyze             Analyzes the available repositories, counting historical LOC
-    list                Lists the available repositories
-    fix                 Runs automatic fixes on the repositories
+  {list,fix,analyze}  Sub-commands help
+    list              Lists the available repositories
+    fix               Runs automatic fixes on the repositories
+    analyze           Analyzes the available repositories, counting historical LOC
+
+optional arguments:
+  -h, --help          show this help message and exit
+  --verbose           Verbose output
+```
+
+## List
+
+Lists the repositories.
+
+By default, skips forks and archived repositories.
+
+```
+usage: main.py list [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+                    [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                    [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                    [--forks {allow,deny,only}] [--archived {allow,deny,only}]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --verbose             Verbose output
   --only-language ONLY_LANGUAGE
                         Only process repositories of the given programming language
   --except-language EXCEPT_LANGUAGE
@@ -42,6 +54,8 @@ optional arguments:
                         Only process repositories whose name starts with the given prefix
   --except-name-prefix EXCEPT_NAME_PREFIX
                         Do not process repositories whose name starts with the given prefix
+  --archived {allow,deny,only}
+                        Filter archived repositories
 
 Authentication:
   -u USER, --user USER  The GitHub username
@@ -55,24 +69,9 @@ Sorting:
 Filtering:
   --forks {allow,deny,only}
                         Filter forks
-```
 
-## Analyze
-
-Analyzes repositories.
-
-By default, skips forks and archived repositories.
-
-```
-usage: main.py analyze [-h] --since SINCE [--metric {commits,files}]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --since SINCE         The start date of the analysis (YYYY-mm-dd)
-  --metric {commits,files}
-                        The metric to report on
-  --archived {allow,deny,only}
-                        Filter archived repositories
+Example:
+    pipenv run python -m instarepo.main list -u USER -t TOKEN
 ```
 
 ## Fix
@@ -88,13 +87,40 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: main.py fix [-h] [--dry-run]
+usage: main.py fix [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+                   [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                   [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                   [--forks {allow,deny,only}] [--dry-run]
 
 Runs automatic fixes on the repositories
 
 optional arguments:
-  -h, --help  show this help message and exit
-  --dry-run   Do not actually push and create MR
+  -h, --help            show this help message and exit
+  --only-language ONLY_LANGUAGE
+                        Only process repositories of the given programming language
+  --except-language EXCEPT_LANGUAGE
+                        Do not process repositories of the given programming language
+  --only-name-prefix ONLY_NAME_PREFIX
+                        Only process repositories whose name starts with the given prefix
+  --except-name-prefix EXCEPT_NAME_PREFIX
+                        Do not process repositories whose name starts with the given prefix
+  --dry-run             Do not actually push and create MR
+
+Authentication:
+  -u USER, --user USER  The GitHub username
+  -t TOKEN, --token TOKEN
+                        The GitHub token
+
+Sorting:
+  --sort {full_name,created,updated,pushed}
+  --direction {asc,desc}
+
+Filtering:
+  --forks {allow,deny,only}
+                        Filter forks
+
+Example:
+    pipenv run python -m instarepo.main fix -u USER -t TOKEN
 ```
 
 ### Fixes
@@ -151,17 +177,49 @@ optional arguments:
 - `must_have_vb6_gitignore`: For Visual Basic projects and project groups,
   adds a `.gitignore` file
 
-## List
 
-Lists the repositories.
+## Analyze
+
+Analyzes repositories.
 
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py list [-h] [--archived {allow,deny,only}]
+usage: main.py analyze [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+                       [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                       [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                       [--forks {allow,deny,only}] [--archived {allow,deny,only}] --since SINCE
+                       [--metric {commits,files}]
 
 optional arguments:
   -h, --help            show this help message and exit
+  --only-language ONLY_LANGUAGE
+                        Only process repositories of the given programming language
+  --except-language EXCEPT_LANGUAGE
+                        Do not process repositories of the given programming language
+  --only-name-prefix ONLY_NAME_PREFIX
+                        Only process repositories whose name starts with the given prefix
+  --except-name-prefix EXCEPT_NAME_PREFIX
+                        Do not process repositories whose name starts with the given prefix
   --archived {allow,deny,only}
                         Filter archived repositories
+  --since SINCE         The start date of the analysis (YYYY-mm-dd)
+  --metric {commits,files}
+                        The metric to report on
+
+Authentication:
+  -u USER, --user USER  The GitHub username
+  -t TOKEN, --token TOKEN
+                        The GitHub token
+
+Sorting:
+  --sort {full_name,created,updated,pushed}
+  --direction {asc,desc}
+
+Filtering:
+  --forks {allow,deny,only}
+                        Filter forks
+
+Example:
+    pipenv run python -m instarepo.main analyze -u USER -t TOKEN --since 2021-11-06
 ```
