@@ -3,8 +3,8 @@ import subprocess
 
 
 class GitWorkingDir:
-    def __init__(self, dir: str, quiet: bool = False):
-        self.dir = dir
+    def __init__(self, directory: str, quiet: bool = False):
+        self.dir = directory
         self.quiet = quiet
 
     def create_branch(self, name: str) -> None:

@@ -1,5 +1,6 @@
+import os
 import os.path
-
+from typing import Optional
 import instarepo.git
 
 
@@ -24,13 +25,13 @@ class SingleFileFix:
         filename = os.path.join(self.git.dir, self.filename)
         if not os.path.isfile(filename):
             return []
-        with open(filename, "r") as f:
-            contents = f.read()
+        with open(filename, "r", encoding="utf-8") as file:
+            contents = file.read()
         converted_contents = self.convert(contents)
         if contents == converted_contents:
             return []
-        with open(filename, "w") as f:
-            f.write(converted_contents)
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(converted_contents)
         self.git.add(self.filename)
         self.git.commit(self.msg)
         return [self.msg]
@@ -66,14 +67,14 @@ class MissingFileFix:
         contents = self.get_contents()
         if contents is None:
             return []
-        with open(full_filename, "w", encoding="utf8") as f:
-            f.write(contents)
+        with open(full_filename, "w", encoding="utf8") as file:
+            file.write(contents)
         self.git.add(relative_filename)
         msg = "Adding " + relative_filename
         self.git.commit(msg)
         return [msg]
 
-    def get_contents(self) -> str:
+    def get_contents(self) -> Optional[str]:
         return None
 
     def should_process_repo(self) -> bool:
@@ -81,7 +82,7 @@ class MissingFileFix:
 
     def _ensure_directories(self):
         root = self.git.dir
-        for dir in self.directory_parts:
-            root = os.path.join(root, dir)
+        for directory in self.directory_parts:
+            root = os.path.join(root, directory)
             if not os.path.isdir(root):
                 os.mkdir(root)

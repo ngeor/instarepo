@@ -40,11 +40,11 @@ def is_pascal_entry(entry):
     )
 
 
-def is_lazarus_project(dir: str) -> bool:
+def is_lazarus_project(directory: str) -> bool:
     """
     Checks if the given directory is a Lazarus project.
     """
-    with os.scandir(dir) as it:
+    with os.scandir(directory) as it:
         for entry in it:
             if entry.name.endswith(".lpr") and entry.is_file():
                 return True
