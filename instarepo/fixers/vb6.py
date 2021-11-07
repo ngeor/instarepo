@@ -26,9 +26,10 @@ VB6_GITIGNORE = """*.exe
 """
 
 
-class MustHaveVB6GitIgnore(MissingFileFix):
+class MustHaveGitIgnore(MissingFileFix):
     """If mising, adds a gitignore file for VB6 projects"""
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, ".gitignore")
 
     def should_process_repo(self):

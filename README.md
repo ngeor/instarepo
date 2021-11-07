@@ -121,6 +121,48 @@ Filtering:
 
 Example:
     pipenv run python -m instarepo.main fix -u USER -t TOKEN
+
+Fixers:
+
+dotnet.dot_net_framework_version_fix
+    Sets the .NET Framework version to 4.7.2 in csproj and web.config files
+dotnet.must_have_c_sharp_app_veyor
+    If missing, creates an appveyor.yml file for CSharp projects
+license.copyright_year_fix
+    Ensures the year in the license file copyright is up to date
+license.must_have_license_fix
+    Ensures that a license file exists
+maven.maven_fix
+    Updates the dependencies of a Maven project
+maven.must_have_maven_git_hub_workflow
+    If missing, adds a GitHub action Maven build workflow
+maven.must_have_maven_git_ignore
+    If missing, adds a .gitignore file for Maven projects
+missing_files.must_have_readme_fix
+    Ensures that the repo has a readme file
+missing_files.must_have_editor_config_fix
+    Ensures an editorconfig file exists
+missing_files.must_have_git_hub_funding_fix
+    Ensures a GitHub funding file exists
+pascal.auto_format
+    Automatically formats Pascal files with JEDI code format
+pascal.must_have_lazarus_git_ignore
+    If missing, adds a gitignore file for Lazarus projects
+readme_image.readme_image_fix
+
+    Finds broken images in the `README.md` file.
+    Able to correct images that were moved one or more
+    folders up but the user forgot to update them in the `README.md` file.
+
+repo_description.repo_description_fix
+
+    Updates GitHub's repo description based on the README file.
+
+    Note: this fixer does not create an MR, it calls the
+    GitHub REST API directly (https://docs.github.com/en/rest/reference/repos#update-a-repository).
+
+vb6.must_have_git_ignore
+    If mising, adds a gitignore file for VB6 projects
 ```
 
 ### Fixes

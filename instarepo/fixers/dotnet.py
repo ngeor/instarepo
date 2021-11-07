@@ -7,12 +7,12 @@ import instarepo.git
 from instarepo.fixers.base import MissingFileFix
 
 
-def is_csharp_project(dir: str) -> bool:
+def is_csharp_project(directory: str) -> bool:
     """
     Checks if the given directory is a C# project.
     The directory must have a .sln file which references at least one C# project.
     """
-    with os.scandir(dir) as it:
+    with os.scandir(directory) as it:
         for entry in it:
             if entry.name.endswith(".sln") and entry.is_file():
                 return is_csharp_solution(entry.path)
@@ -34,10 +34,7 @@ def is_csharp_solution(sln_file: str) -> bool:
 class DotNetFrameworkVersionFix:
     """Sets the .NET Framework version to 4.7.2 in csproj and web.config files"""
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-    ):
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         self.git = git
         self.result = []
 
@@ -127,7 +124,7 @@ class DotNetFrameworkVersionFix:
 class MustHaveCSharpAppVeyor(MissingFileFix):
     """If missing, creates an appveyor.yml file for CSharp projects"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, "appveyor.yml")
 
     def should_process_repo(self):

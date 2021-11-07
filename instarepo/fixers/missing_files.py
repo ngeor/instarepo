@@ -5,10 +5,9 @@ from instarepo.fixers.base import MissingFileFix
 
 class MustHaveReadmeFix(MissingFileFix):
     """Ensures that the repo has a readme file"""
+
     def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: instarepo.github.Repo,
+        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
     ):
         super().__init__(git, "README.md")
         self.repo = repo
@@ -38,7 +37,8 @@ end_of_line = lf
 
 class MustHaveEditorConfigFix(MissingFileFix):
     """Ensures an editorconfig file exists"""
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, ".editorconfig")
 
     def get_contents(self):
@@ -62,7 +62,10 @@ custom: ['https://ngeor.com/support/']
 
 class MustHaveGitHubFundingFix(MissingFileFix):
     """Ensures a GitHub funding file exists"""
-    def __init__(self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo):
+
+    def __init__(
+        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+    ):
         super().__init__(git, ".github/FUNDING.yml")
         self.repo = repo
 

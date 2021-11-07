@@ -10,14 +10,14 @@ RE_MARKDOWN_IMAGE = re.compile(
 )
 
 
-class ReadmeFix(SingleFileFix):
+class ReadmeImageFix(SingleFileFix):
     """
     Finds broken images in the `README.md` file.
     Able to correct images that were moved one or more
     folders up but the user forgot to update them in the `README.md` file.
     """
 
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, "README.md", "Fixed broken images in README")
 
     def convert(self, contents: str) -> str:

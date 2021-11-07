@@ -11,19 +11,17 @@ import instarepo.git
 from instarepo.fixers.base import MissingFileFix
 
 
-def is_maven_project(dir: str) -> bool:
+def is_maven_project(directory: str) -> bool:
     """
     Checks if the given directory is a Maven project.
     """
-    return os.path.isfile(os.path.join(dir, "pom.xml"))
+    return os.path.isfile(os.path.join(directory, "pom.xml"))
 
 
 class MavenFix:
     """Updates the dependencies of a Maven project"""
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-    ):
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         self.git = git
         self._commits: list[str] = []
         self._full_filename: str = ""
@@ -255,7 +253,8 @@ jobs:
 
 class MustHaveMavenGitHubWorkflow(MissingFileFix):
     """If missing, adds a GitHub action Maven build workflow"""
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, ".github/workflows/maven.yml")
 
     def should_process_repo(self):
@@ -267,7 +266,8 @@ class MustHaveMavenGitHubWorkflow(MissingFileFix):
 
 class MustHaveMavenGitIgnore(MissingFileFix):
     """If missing, adds a .gitignore file for Maven projects"""
-    def __init__(self, git: instarepo.git.GitWorkingDir):
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, ".gitignore")
 
     def should_process_repo(self):

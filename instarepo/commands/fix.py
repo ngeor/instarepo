@@ -2,7 +2,7 @@ import logging
 import tempfile
 from typing import Iterable
 
-import requests
+import requests.auth
 
 import instarepo.git
 import instarepo.github
@@ -88,7 +88,7 @@ class RepoProcessor:
         remote_branch_sha = ""
         try:
             remote_branch_sha = self.git.rev_parse(f"remotes/origin/{self.branch_name}")
-        except:
+        except:  # pylint: disable=bare-except
             pass
         if remote_branch_sha:
             self.git.checkout(self.branch_name)
@@ -96,30 +96,16 @@ class RepoProcessor:
             self.git.create_branch(self.branch_name)
 
     def run_fixes(self):
-        fix = instarepo.fixers.base.CompositeFix(
-            [
-                instarepo.fixers.dotnet.DotNetFrameworkVersionFix(self.git),
-                instarepo.fixers.dotnet.MustHaveCSharpAppVeyor(self.git),
-                instarepo.fixers.license.CopyrightYearFix(self.git, self.repo),
-                instarepo.fixers.license.MustHaveLicenseFix(self.git, self.repo),
-                instarepo.fixers.maven.MavenFix(self.git),
-                instarepo.fixers.maven.MustHaveMavenGitIgnore(self.git),
-                instarepo.fixers.maven.MustHaveMavenGitHubWorkflow(self.git),
-                instarepo.fixers.missing_files.MustHaveEditorConfigFix(self.git),
-                instarepo.fixers.missing_files.MustHaveGitHubFundingFix(
-                    self.git, self.repo
-                ),
-                instarepo.fixers.missing_files.MustHaveReadmeFix(self.git, self.repo),
-                instarepo.fixers.pascal.AutoFormat(self.git),
-                instarepo.fixers.pascal.MustHaveLazarusGitIgnore(self.git),
-                instarepo.fixers.readme_image.ReadmeFix(self.git),
-                instarepo.fixers.repo_description.RepoDescriptionFix(
-                    self.github, self.git, self.repo
-                ),
-                instarepo.fixers.vb6.MustHaveVB6GitIgnore(self.git),
-            ]
+        composite_fixer = self._create_composite_fixer()
+        return composite_fixer.run()
+
+    def _create_composite_fixer(self):
+        return instarepo.fixers.base.CompositeFix(
+            [self._create_fixer(fixer_class) for fixer_class in all_fixer_classes()]
         )
-        return fix.run()
+
+    def _create_fixer(self, fixer_class):
+        return fixer_class(git=self.git, repo=self.repo, github=self.github)
 
     def has_changes(self):
         current_sha = self.git.rev_parse(self.branch_name)
@@ -161,7 +147,79 @@ def format_body(changes: Iterable[str]) -> str:
     return body
 
 
-def non_empty_lines(s: str) -> Iterable[str]:
-    lines = s.split("\n")
+def non_empty_lines(value: str) -> Iterable[str]:
+    lines = value.split("\n")
     stripped_lines = (line.strip() for line in lines)
     return (line for line in stripped_lines if line)
+
+
+def epilog():
+    """
+    Creates a help text for the available fixers.
+    """
+    result = ""
+    for clz in all_fixer_classes():
+        result += fixer_class_to_fixer_key(clz)
+        result += "\n    "
+        result += clz.__doc__
+        result += "\n"
+    return result
+
+
+def fixer_class_to_fixer_key(clz):
+    """
+    Derives the unique fixer identifier out of a fixer class.
+    The identifier is shorter and can be used to dynamically
+    turn fixers on/off via the CLI.
+    """
+    my_module: str = clz.__module__.removeprefix("instarepo.fixers.")
+    return my_module + "." + pascal_case_to_underscore_case(clz.__name__)
+
+
+def pascal_case_to_underscore_case(value: str) -> str:
+    """
+    Converts a pascal case string (e.g. MyClass)
+    into a lower case underscore separated string (e.g. my_class).
+    """
+    result = ""
+    for ch in value:
+        if "A" <= ch <= "Z":
+            if result:
+                result += "_"
+            result += ch.lower()
+        else:
+            result += ch
+    return result
+
+
+def all_fixer_classes():
+    """Gets all fixer classes"""
+    my_modules = [
+        instarepo.fixers.dotnet,
+        instarepo.fixers.license,
+        instarepo.fixers.maven,
+        instarepo.fixers.missing_files,
+        instarepo.fixers.pascal,
+        instarepo.fixers.readme_image,
+        instarepo.fixers.repo_description,
+        instarepo.fixers.vb6,
+    ]
+    for my_module in my_modules:
+        my_classes = classes_in_module(my_module)
+        for clz in my_classes:
+            yield clz
+
+
+def classes_in_module(module):
+    """
+    Gets the classes defined in the given module
+    """
+    module_dict = module.__dict__
+    return (
+        module_dict[c]
+        for c in module_dict
+        if (
+            isinstance(module_dict[c], type)
+            and module_dict[c].__module__ == module.__name__
+        )
+    )

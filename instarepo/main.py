@@ -61,7 +61,11 @@ def parse_args(args=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Example:
     pipenv run python -m instarepo.main fix -u USER -t TOKEN
-    """,
+
+Fixers:
+
+"""
+        + instarepo.commands.fix.epilog(),
     )
     _configure_fix_parser(fix_parser)
 

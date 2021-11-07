@@ -22,6 +22,7 @@ class RepoDescriptionFix:
         github: instarepo.github.GitHub,
         git: instarepo.git.GitWorkingDir,
         repo: instarepo.github.Repo,
+        **kwargs
     ):
         self.github = github
         self.git = git
