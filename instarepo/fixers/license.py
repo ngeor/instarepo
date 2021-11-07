@@ -29,6 +29,7 @@ def update_copyright_year(contents: str, year: int) -> str:
 
 
 class CopyrightYearFix:
+    """Ensures the year in the license file copyright is up to date"""
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,
@@ -81,6 +82,7 @@ SOFTWARE.
 
 
 class MustHaveLicenseFix(MissingFileFix):
+    """Ensures that a license file exists"""
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,

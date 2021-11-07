@@ -32,6 +32,8 @@ def is_csharp_solution(sln_file: str) -> bool:
 
 
 class DotNetFrameworkVersionFix:
+    """Sets the .NET Framework version to 4.7.2 in csproj and web.config files"""
+
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,
@@ -123,6 +125,8 @@ class DotNetFrameworkVersionFix:
 
 
 class MustHaveCSharpAppVeyor(MissingFileFix):
+    """If missing, creates an appveyor.yml file for CSharp projects"""
+
     def __init__(self, git: instarepo.git.GitWorkingDir):
         super().__init__(git, "appveyor.yml")
 

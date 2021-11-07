@@ -52,6 +52,7 @@ def is_lazarus_project(directory: str) -> bool:
 
 
 class AutoFormat:
+    """Automatically formats Pascal files with JEDI code format"""
     def __init__(self, git: instarepo.git.GitWorkingDir):
         self.git = git
         self.files = []
@@ -115,6 +116,7 @@ backup/
 
 
 class MustHaveLazarusGitIgnore(MissingFileFix):
+    """If missing, adds a gitignore file for Lazarus projects"""
     def __init__(self, git: instarepo.git.GitWorkingDir):
         super().__init__(git, ".gitignore")
 

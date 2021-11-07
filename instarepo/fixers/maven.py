@@ -1,3 +1,4 @@
+import os
 import os.path
 import platform
 import re
@@ -18,13 +19,14 @@ def is_maven_project(dir: str) -> bool:
 
 
 class MavenFix:
+    """Updates the dependencies of a Maven project"""
     def __init__(
         self,
         git: instarepo.git.GitWorkingDir,
     ):
         self.git = git
         self._commits: list[str] = []
-        self._full_filename: str = None
+        self._full_filename: str = ""
 
     def run(self):
         if not is_maven_project(self.git.dir):
@@ -252,6 +254,7 @@ jobs:
 
 
 class MustHaveMavenGitHubWorkflow(MissingFileFix):
+    """If missing, adds a GitHub action Maven build workflow"""
     def __init__(self, git: instarepo.git.GitWorkingDir):
         super().__init__(git, ".github/workflows/maven.yml")
 
@@ -263,6 +266,7 @@ class MustHaveMavenGitHubWorkflow(MissingFileFix):
 
 
 class MustHaveMavenGitIgnore(MissingFileFix):
+    """If missing, adds a .gitignore file for Maven projects"""
     def __init__(self, git: instarepo.git.GitWorkingDir):
         super().__init__(git, ".gitignore")
 
