@@ -66,3 +66,29 @@ def test_create_command_analyze():
     )
     cmd = create_command(args)
     assert isinstance(cmd, AnalyzeCommand)
+
+
+def test_parse_args_fix_fixer_selection():
+    """Parse specific fixers"""
+    args = parse_args(
+        args=["fix", "-u", "jdoe", "-t", "secret", "--only-fixers", "dotnet", "maven"]
+    )
+    assert args.only_fixers == ["dotnet", "maven"]
+    args = parse_args(
+        args=["fix", "-u", "jdoe", "-t", "secret", "--except-fixers", "dotnet", "vb6"]
+    )
+    assert args.except_fixers == ["dotnet", "vb6"]
+    with pytest.raises(SystemExit):
+        parse_args(
+            args=[
+                "fix",
+                "-u",
+                "jdoe",
+                "-t",
+                "secret",
+                "--except-fixers",
+                "foo",
+                "--skip-fixers",
+                "bar",
+            ]
+        )

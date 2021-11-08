@@ -1,8 +1,14 @@
 """Unit tests for fix.py"""
 import os
 import pytest
-from instarepo.fixers.dotnet import MustHaveCSharpAppVeyor
-from .fix import format_body, all_fixer_classes, fixer_class_to_fixer_key
+import instarepo.fixers.dotnet
+import instarepo.fixers.maven
+from .fix import (
+    format_body,
+    all_fixer_classes,
+    fixer_class_to_fixer_key,
+    select_fixer_classes,
+)
 
 
 def test_format_body_one_change():
@@ -58,7 +64,7 @@ def test_fixer_has_doc_string(fixer_class):
 def test_fixer_class_to_fixer_key():
     """Tests various fixer classes can be mapped to a key"""
     assert (
-        fixer_class_to_fixer_key(MustHaveCSharpAppVeyor)
+        fixer_class_to_fixer_key(instarepo.fixers.dotnet.MustHaveCSharpAppVeyor)
         == "dotnet.must_have_c_sharp_app_veyor"
     )
 
@@ -70,3 +76,29 @@ def test_can_create_fixer(fixer_class):
     mock_repo = ()
     instance = fixer_class(git=mock_git, repo=mock_repo, github=mock_github)
     assert instance
+
+
+def test_select_fixer_classes():
+    """Tests the select_fixer_classes function"""
+    assert list(all_fixer_classes()) == list(select_fixer_classes())
+    assert [
+        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+    ] == list(select_fixer_classes(only_fixers=["dotnet"]))
+    assert [
+        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+        instarepo.fixers.maven.MavenFix,
+        instarepo.fixers.maven.MustHaveMavenGitHubWorkflow,
+        instarepo.fixers.maven.MustHaveMavenGitIgnore,
+    ] == list(select_fixer_classes(only_fixers=["dotnet", "maven"]))
+    with pytest.raises(ValueError):
+        list(select_fixer_classes(only_fixers=["a"], except_fixers=["b"]))
+    assert [
+        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+    ] == list(
+        select_fixer_classes(
+            except_fixers=["license", "maven", "missing_files", "pascal", "r", "vb"]
+        )
+    )

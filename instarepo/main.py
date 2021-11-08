@@ -99,6 +99,19 @@ def _configure_fix_parser(parser: argparse.ArgumentParser):
         default=False,
         help="Do not actually push and create MR",
     )
+    fixer_group = parser.add_mutually_exclusive_group()
+    fixer_group.add_argument(
+        "--only-fixers",
+        action="store",
+        nargs="+",
+        help="Only run fixers that have the given prefixes",
+    )
+    fixer_group.add_argument(
+        "--except-fixers",
+        action="store",
+        nargs="+",
+        help="Do not run fixers that have the given prefixes",
+    )
 
 
 def _configure_analyze_parser(parser: argparse.ArgumentParser):

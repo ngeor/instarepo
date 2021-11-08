@@ -90,7 +90,8 @@ By default skips forks. It's not possible to select archived repositories, as th
 usage: main.py fix [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
                    [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                    [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                   [--forks {allow,deny,only}] [--dry-run]
+                   [--forks {allow,deny,only}] [--dry-run] [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
+                   --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
 
 Runs automatic fixes on the repositories
 
@@ -105,6 +106,10 @@ optional arguments:
   --except-name-prefix EXCEPT_NAME_PREFIX
                         Do not process repositories whose name starts with the given prefix
   --dry-run             Do not actually push and create MR
+  --only-fixers ONLY_FIXERS [ONLY_FIXERS ...]
+                        Only run fixers that have the given prefixes
+  --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]
+                        Do not run fixers that have the given prefixes
 
 Authentication:
   -u USER, --user USER  The GitHub username

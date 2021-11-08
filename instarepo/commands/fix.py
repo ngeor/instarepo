@@ -36,8 +36,18 @@ class FixCommand:
         )
         self.dry_run: bool = args.dry_run
         self.verbose: bool = args.verbose
+        self.fixer_classes = list(
+            select_fixer_classes(args.only_fixers, args.except_fixers)
+        )
 
     def run(self):
+        if not self.fixer_classes:
+            logging.error("No fixers selected!")
+            return
+        logging.debug(
+            "Using fixers %s",
+            ", ".join(map(fixer_class_to_fixer_key, self.fixer_classes)),
+        )
         repos = self.repo_source.get()
         for repo in repos:
             self.process(repo)
@@ -47,7 +57,13 @@ class FixCommand:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logging.debug("Cloning repo into temp dir %s", tmpdirname)
             git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
-            processor = RepoProcessor(repo, self.github, git, self.dry_run)
+            processor = RepoProcessor(
+                repo,
+                self.github,
+                git,
+                self.fixer_classes,
+                self.dry_run,
+            )
             processor.process()
 
 
@@ -57,11 +73,13 @@ class RepoProcessor:
         repo: instarepo.github.Repo,
         github: instarepo.github.GitHub,
         git: instarepo.git.GitWorkingDir,
+        fixer_classes,
         dry_run: bool = False,
     ):
         self.repo = repo
         self.github = github
         self.git = git
+        self.fixer_classes = fixer_classes
         self.dry_run = dry_run
         self.branch_name = "instarepo_branch"
 
@@ -101,7 +119,12 @@ class RepoProcessor:
 
     def _create_composite_fixer(self):
         return instarepo.fixers.base.CompositeFix(
-            [self._create_fixer(fixer_class) for fixer_class in all_fixer_classes()]
+            list(
+                map(
+                    self._create_fixer,
+                    self.fixer_classes,
+                )
+            )
         )
 
     def _create_fixer(self, fixer_class):
@@ -190,6 +213,34 @@ def pascal_case_to_underscore_case(value: str) -> str:
         else:
             result += ch
     return result
+
+
+def select_fixer_classes(
+    only_fixers: list[str] = None, except_fixers: list[str] = None
+):
+    if only_fixers:
+        if except_fixers:
+            raise ValueError("Cannot use only_fixers and except_fixers together")
+        return filter(
+            lambda fixer_class: _prefixes_of_fixer(fixer_class, only_fixers),
+            all_fixer_classes(),
+        )
+    elif except_fixers:
+        return filter(
+            lambda fixer_class: not _prefixes_of_fixer(fixer_class, except_fixers),
+            all_fixer_classes(),
+        )
+    else:
+        return all_fixer_classes()
+
+
+def _prefixes_of_fixer(fixer_class, all_prefixes: list[str]):
+    return list(
+        filter(
+            lambda prefix: fixer_class_to_fixer_key(fixer_class).startswith(prefix),
+            all_prefixes,
+        )
+    )
 
 
 def all_fixer_classes():
