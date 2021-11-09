@@ -4,10 +4,9 @@ import platform
 import re
 import subprocess
 import xml.etree.ElementTree as ET
-
 import requests
-
 import instarepo.git
+import instarepo.xml_utils
 from instarepo.fixers.base import MissingFileFix
 from .finders import is_maven_project
 
@@ -32,14 +31,10 @@ class MavenFix:
         return self._commits
 
     def remove_snapshot_parent_pom(self):
-        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-        tree = ET.parse(self._full_filename, parser=parser)
-        if tree is None:
-            return
-        root = tree.getroot()
-        if root is None:
-            return
-        parent = root.find("{http://maven.apache.org/POM/4.0.0}parent")
+        tree = instarepo.xml_utils.parse(self._full_filename)
+        parent = instarepo.xml_utils.find_at_tree(
+            tree, "{http://maven.apache.org/POM/4.0.0}parent"
+        )
         if parent is None:
             return
         group_id = parent.find("{http://maven.apache.org/POM/4.0.0}groupId")

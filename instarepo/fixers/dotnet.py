@@ -2,8 +2,8 @@ import logging
 import os
 import os.path
 import xml.etree.ElementTree as ET
-
 import instarepo.git
+import instarepo.xml_utils
 from instarepo.fixers.base import MissingFileFix
 
 
@@ -54,20 +54,11 @@ class DotNetFrameworkVersionFix:
         logging.debug("Processing csproj %s", filename)
         ET.register_namespace("", "http://schemas.microsoft.com/developer/msbuild/2003")
         try:
-            parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-            tree = ET.parse(filename, parser=parser)
-            if tree is None:
-                return
-            root = tree.getroot()
-            if root is None:
-                return
-            property_group = root.find(
-                "{http://schemas.microsoft.com/developer/msbuild/2003}PropertyGroup"
-            )
-            if property_group is None:
-                return
-            target_framework_version = property_group.find(
-                "{http://schemas.microsoft.com/developer/msbuild/2003}TargetFrameworkVersion"
+            tree = instarepo.xml_utils.parse(filename)
+            target_framework_version = instarepo.xml_utils.find_at_tree(
+                tree,
+                "{http://schemas.microsoft.com/developer/msbuild/2003}PropertyGroup",
+                "{http://schemas.microsoft.com/developer/msbuild/2003}TargetFrameworkVersion",
             )
             if target_framework_version is None:
                 return
@@ -92,17 +83,10 @@ class DotNetFrameworkVersionFix:
 
     def process_web_config(self, filename: str):
         logging.debug("Processing web.config %s", filename)
-        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-        tree = ET.parse(filename, parser=parser)
-        if tree is None:
-            return
-        root = tree.getroot()
-        if root is None:
-            return
-        system_web = root.find("system.web")
-        if system_web is None:
-            return
-        compilation = system_web.find("compilation")
+        tree = instarepo.xml_utils.parse(filename)
+        compilation = instarepo.xml_utils.find_at_tree(
+            tree, "system.web", "compilation"
+        )
         if compilation is None:
             return
         desired_framework_version = "4.7.2"
