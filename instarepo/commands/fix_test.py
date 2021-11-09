@@ -11,43 +11,44 @@ from .fix import (
 )
 
 
-def test_format_body_one_change():
-    changes = ["Simple change"]
-    expected_body = """The following fixes have been applied:
+class TestFormatBody:
+    """Unit tests for format_body"""
+
+    def test_one_change(self):
+        changes = ["Simple change"]
+        expected_body = """The following fixes have been applied:
 - Simple change
 """.replace(
-        os.linesep, "\n"
-    )
-    actual_body = format_body(changes)
-    assert actual_body == expected_body
+            os.linesep, "\n"
+        )
+        actual_body = format_body(changes)
+        assert actual_body == expected_body
 
-
-def test_format_body_two_changes():
-    changes = ["Simple change", "Second change"]
-    expected_body = """The following fixes have been applied:
+    def test_two_changes(self):
+        changes = ["Simple change", "Second change"]
+        expected_body = """The following fixes have been applied:
 - Simple change
 - Second change
 """.replace(
-        os.linesep, "\n"
-    )
-    actual_body = format_body(changes)
-    assert actual_body == expected_body
+            os.linesep, "\n"
+        )
+        actual_body = format_body(changes)
+        assert actual_body == expected_body
 
-
-def test_format_body_convert_multi_line_to_indentation():
-    changes = [
-        """Complex change
+    def test_convert_multi_line_to_indentation(self):
+        changes = [
+            """Complex change
 Updated parent to 1.0
 """
-    ]
-    expected_body = """The following fixes have been applied:
+        ]
+        expected_body = """The following fixes have been applied:
 - Complex change
   Updated parent to 1.0
 """.replace(
-        os.linesep, "\n"
-    )
-    actual_body = format_body(changes)
-    assert actual_body == expected_body
+            os.linesep, "\n"
+        )
+        actual_body = format_body(changes)
+        assert actual_body == expected_body
 
 
 @pytest.fixture(params=[clz for clz in all_fixer_classes()])
@@ -55,7 +56,7 @@ def fixer_class(request):
     return request.param
 
 
-def test_fixer_has_doc_string(fixer_class):
+def test_fixer_has_doc_string(fixer_class):  # pylint: disable=redefined-outer-name
     """Tests all fixer classes have a doc string"""
     assert fixer_class
     assert fixer_class.__doc__
@@ -69,7 +70,7 @@ def test_fixer_class_to_fixer_key():
     )
 
 
-def test_can_create_fixer(fixer_class):
+def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     """Tests that it is possible to instantiate all fixers"""
     mock_git = ()
     mock_github = ()
@@ -90,7 +91,6 @@ def test_select_fixer_classes():
         instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
         instarepo.fixers.maven.MavenFix,
         instarepo.fixers.maven.MustHaveMavenGitHubWorkflow,
-        instarepo.fixers.maven.MustHaveMavenGitIgnore,
     ] == list(select_fixer_classes(only_fixers=["dotnet", "maven"]))
     with pytest.raises(ValueError):
         list(select_fixer_classes(only_fixers=["a"], except_fixers=["b"]))

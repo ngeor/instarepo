@@ -141,18 +141,16 @@ maven.maven_fix
     Updates the dependencies of a Maven project
 maven.must_have_maven_git_hub_workflow
     If missing, adds a GitHub action Maven build workflow
-maven.must_have_maven_git_ignore
-    If missing, adds a .gitignore file for Maven projects
 missing_files.must_have_readme_fix
     Ensures that the repo has a readme file
 missing_files.must_have_editor_config_fix
     Ensures an editorconfig file exists
 missing_files.must_have_git_hub_funding_fix
     Ensures a GitHub funding file exists
+missing_files.must_have_git_ignore
+    Ensures a .gitignore file exists
 pascal.auto_format
     Automatically formats Pascal files with JEDI code format
-pascal.must_have_lazarus_git_ignore
-    If missing, adds a gitignore file for Lazarus projects
 readme_image.readme_image_fix
 
     Finds broken images in the `README.md` file.
@@ -165,9 +163,6 @@ repo_description.repo_description_fix
 
     Note: this fixer does not create an MR, it calls the
     GitHub REST API directly (https://docs.github.com/en/rest/reference/repos#update-a-repository).
-
-vb6.must_have_git_ignore
-    If mising, adds a gitignore file for VB6 projects
 ```
 
 ### Fixes

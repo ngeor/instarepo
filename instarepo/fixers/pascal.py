@@ -3,9 +3,7 @@ import logging
 import os
 import os.path
 import subprocess
-
 import instarepo.git
-from instarepo.fixers.base import MissingFileFix
 
 JCF_EXE = "C:\\opt\\jcf_243_exe\\JCF.exe"
 
@@ -38,17 +36,6 @@ def is_pascal_entry(entry):
     return entry.is_file() and (
         entry.name.endswith(".pas") or entry.name.endswith(".lpr")
     )
-
-
-def is_lazarus_project(directory: str) -> bool:
-    """
-    Checks if the given directory is a Lazarus project.
-    """
-    with os.scandir(directory) as it:
-        for entry in it:
-            if entry.name.endswith(".lpr") and entry.is_file():
-                return True
-    return False
 
 
 class AutoFormat:
@@ -102,28 +89,3 @@ class AutoFormat:
             rel_pas_file,
         ]
         return args
-
-
-LAZARUS_GITIGNORE = """*.o
-*.ppu
-*.obj
-*.exe
-*.dll
-*.compiled
-*.bak
-*.lps
-backup/
-"""
-
-
-class MustHaveLazarusGitIgnore(MissingFileFix):
-    """If missing, adds a gitignore file for Lazarus projects"""
-
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, ".gitignore")
-
-    def should_process_repo(self):
-        return is_lazarus_project(self.git.dir)
-
-    def get_contents(self):
-        return LAZARUS_GITIGNORE

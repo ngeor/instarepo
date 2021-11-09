@@ -1,6 +1,8 @@
+import requests
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
+from .finders import is_lazarus_project, is_maven_project, is_vb6_project
 
 
 class MustHaveReadmeFix(MissingFileFix):
@@ -74,3 +76,40 @@ class MustHaveGitHubFundingFix(MissingFileFix):
 
     def get_contents(self):
         return FUNDING_YML
+
+
+class MustHaveGitIgnore(MissingFileFix):
+    """Ensures a .gitignore file exists"""
+
+    LAZARUS_GITIGNORE = """*.o
+*.ppu
+*.obj
+*.exe
+*.dll
+*.compiled
+*.bak
+*.lps
+backup/
+"""
+    VB6_GITIGNORE = """*.exe
+*.dll
+*.ocx
+*.vbw
+"""
+
+    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
+        super().__init__(git, ".gitignore")
+
+    def get_contents(self):
+        if is_maven_project(self.git.dir):
+            # https://github.com/github/gitignore/blob/master/Maven.gitignore
+            response = requests.get(
+                "https://raw.githubusercontent.com/github/gitignore/master/Maven.gitignore"
+            )
+            response.raise_for_status()
+            return response.text
+        if is_lazarus_project(self.git.dir):
+            return self.LAZARUS_GITIGNORE
+        if is_vb6_project(self.git.dir):
+            return self.VB6_GITIGNORE
+        return None

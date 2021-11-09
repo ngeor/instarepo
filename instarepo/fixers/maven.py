@@ -9,13 +9,7 @@ import requests
 
 import instarepo.git
 from instarepo.fixers.base import MissingFileFix
-
-
-def is_maven_project(directory: str) -> bool:
-    """
-    Checks if the given directory is a Maven project.
-    """
-    return os.path.isfile(os.path.join(directory, "pom.xml"))
+from .finders import is_maven_project
 
 
 class MavenFix:
@@ -262,21 +256,3 @@ class MustHaveMavenGitHubWorkflow(MissingFileFix):
 
     def get_contents(self):
         return MAVEN_YML
-
-
-class MustHaveMavenGitIgnore(MissingFileFix):
-    """If missing, adds a .gitignore file for Maven projects"""
-
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, ".gitignore")
-
-    def should_process_repo(self):
-        return is_maven_project(self.git.dir)
-
-    def get_contents(self):
-        # https://github.com/github/gitignore/blob/master/Maven.gitignore
-        response = requests.get(
-            "https://raw.githubusercontent.com/github/gitignore/master/Maven.gitignore"
-        )
-        response.raise_for_status()
-        return response.text
