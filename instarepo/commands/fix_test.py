@@ -99,6 +99,14 @@ def test_select_fixer_classes():
         instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
     ] == list(
         select_fixer_classes(
-            except_fixers=["license", "maven", "missing_files", "pascal", "r", "vb"]
+            except_fixers=[
+                "ci",
+                "license",
+                "maven",
+                "missing_files",
+                "pascal",
+                "r",
+                "vb",
+            ]
         )
     )

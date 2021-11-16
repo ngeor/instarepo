@@ -32,6 +32,9 @@ class GitWorkingDir:
     def add(self, file: str) -> None:
         subprocess.run(["git", "add", file], check=True, cwd=self.dir)
 
+    def rm(self, file: str) -> None:
+        subprocess.run(["git", "rm", file], check=True, cwd=self.dir)
+
     def commit(self, message: str) -> None:
         args = ["git", "commit"]
         if self.quiet:
