@@ -1,5 +1,5 @@
 import re
-import instarepo.fixers.readme_image
+import instarepo.fixers.readme
 
 
 def f(m: re.Match[str]) -> str:
@@ -23,5 +23,5 @@ A Delphi app to rename files (legacy project)
 
 ![screenshot](/scrnshot.png?raw=true "Screenshot")
     """
-    x = instarepo.fixers.readme_image.RE_MARKDOWN_IMAGE.sub(f, s)
+    x = instarepo.fixers.readme.RE_MARKDOWN_IMAGE.sub(f, s)
     assert x == expected

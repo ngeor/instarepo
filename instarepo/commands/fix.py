@@ -14,7 +14,7 @@ import instarepo.fixers.license
 import instarepo.fixers.maven
 import instarepo.fixers.missing_files
 import instarepo.fixers.pascal
-import instarepo.fixers.readme_image
+import instarepo.fixers.readme
 import instarepo.fixers.repo_description
 import instarepo.fixers.vb6
 
@@ -253,7 +253,7 @@ def all_fixer_classes():
         instarepo.fixers.maven,
         instarepo.fixers.missing_files,
         instarepo.fixers.pascal,
-        instarepo.fixers.readme_image,
+        instarepo.fixers.readme,
         instarepo.fixers.repo_description,
         instarepo.fixers.vb6,
     ]
