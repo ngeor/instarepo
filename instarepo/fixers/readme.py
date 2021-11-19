@@ -1,3 +1,7 @@
+"""
+Fixers for the README.md file
+"""
+
 import os.path
 import re
 

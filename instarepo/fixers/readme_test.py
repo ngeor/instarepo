@@ -1,17 +1,11 @@
+"""Unit tests for readme.py"""
+
 import re
 import instarepo.fixers.readme
 
 
-def f(m: re.Match[str]) -> str:
-    return (
-        m.string[m.start() : m.start("filename")]
-        + "/scrnshot.png"
-        + m.string[m.end("filename") : m.end()]
-    )
-
-
 def test_match_screenshot():
-    s = """
+    input_readme = """
     # GodFather
 A Delphi app to rename files (legacy project)
 
@@ -23,5 +17,13 @@ A Delphi app to rename files (legacy project)
 
 ![screenshot](/scrnshot.png?raw=true "Screenshot")
     """
-    x = instarepo.fixers.readme.RE_MARKDOWN_IMAGE.sub(f, s)
-    assert x == expected
+
+    def replacer(match: re.Match[str]) -> str:
+        return (
+            match.string[match.start() : match.start("filename")]
+            + "/scrnshot.png"
+            + match.string[match.end("filename") : match.end()]
+        )
+
+    actual = instarepo.fixers.readme.RE_MARKDOWN_IMAGE.sub(replacer, input_readme)
+    assert actual == expected
