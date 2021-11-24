@@ -129,35 +129,39 @@ Example:
 
 Fixers:
 
-dotnet.dot_net_framework_version_fix
+ci.no_travis
+    Removes the .travis.yml file
+ci.no_travis_badge
+    Removes the Travis badge from README files
+dotnet.dot_net_framework_version
     Sets the .NET Framework version to 4.7.2 in csproj and web.config files
 dotnet.must_have_c_sharp_app_veyor
     If missing, creates an appveyor.yml file for CSharp projects
-license.copyright_year_fix
+license.copyright_year
     Ensures the year in the license file copyright is up to date
-license.must_have_license_fix
+license.must_have_license
     Ensures that a license file exists
-maven.maven_fix
+maven.maven
     Updates the dependencies of a Maven project
 maven.must_have_maven_git_hub_workflow
     If missing, adds a GitHub action Maven build workflow
-missing_files.must_have_readme_fix
+maven.maven_badges
+    Fixes badges for Maven libraries
+missing_files.must_have_readme
     Ensures that the repo has a readme file
-missing_files.must_have_editor_config_fix
+missing_files.must_have_editor_config
     Ensures an editorconfig file exists
-missing_files.must_have_git_hub_funding_fix
+missing_files.must_have_git_hub_funding
     Ensures a GitHub funding file exists
-missing_files.must_have_git_ignore
-    Ensures a .gitignore file exists
 pascal.auto_format
     Automatically formats Pascal files with JEDI code format
-readme_image.readme_image_fix
+readme.readme_image
 
     Finds broken images in the `README.md` file.
     Able to correct images that were moved one or more
     folders up but the user forgot to update them in the `README.md` file.
 
-repo_description.repo_description_fix
+repo_description.repo_description
 
     Updates GitHub's repo description based on the README file.
 

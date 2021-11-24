@@ -95,7 +95,7 @@ class DotNetFrameworkVersionFix:
         self.result.append(msg)
 
 
-class MustHaveCSharpAppVeyor(MissingFileFix):
+class MustHaveCSharpAppVeyorFix(MissingFileFix):
     """If missing, creates an appveyor.yml file for CSharp projects"""
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):

@@ -1,14 +1,22 @@
+"""Fixes for Maven projects"""
+import logging
 import os
 import os.path
 import platform
 import re
 import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
+from typing import Optional
+
 import requests
+
 import instarepo.git
+import instarepo.github
 import instarepo.xml_utils
 from instarepo.fixers.base import MissingFileFix
 from .finders import is_maven_project
+from .readme import locate_badges, merge_badges
 
 
 class MavenFix:
@@ -18,6 +26,7 @@ class MavenFix:
         self.git = git
         self._commits: list[str] = []
         self._full_filename: str = ""
+        self.maven = Maven(self.git.dir)
 
     def run(self):
         if not is_maven_project(self.git.dir):
@@ -38,22 +47,30 @@ class MavenFix:
         if parent is None:
             return
         group_id = parent.find("{http://maven.apache.org/POM/4.0.0}groupId")
-        if group_id is None:
+        if group_id is None or group_id.text is None:
             return
         artifact_id = parent.find("{http://maven.apache.org/POM/4.0.0}artifactId")
-        if artifact_id is None:
+        if artifact_id is None or artifact_id.text is None:
             return
         version = parent.find("{http://maven.apache.org/POM/4.0.0}version")
         if version is None:
             return
         relative_path = parent.find("{http://maven.apache.org/POM/4.0.0}relativePath")
         has_changes = False
-        if relative_path is not None and relative_path.text.startswith("../"):
+        if (
+            relative_path is not None
+            and relative_path.text is not None
+            and relative_path.text.startswith("../")
+        ):
             parent.remove(relative_path)
             has_changes = True
-        if "SNAPSHOT" in version.text:
-            version.text = get_latest_artifact_version(group_id.text, artifact_id.text)
-            has_changes = True
+        if version.text is not None and "SNAPSHOT" in version.text:
+            latest_version = get_latest_artifact_version(
+                group_id.text, artifact_id.text
+            )
+            if latest_version:
+                version.text = latest_version
+                has_changes = True
         if has_changes:
             tree.write(
                 self._full_filename,
@@ -82,23 +99,12 @@ class MavenFix:
         )
         # hack for running on Windows
         rules = "/" + rules.replace("\\", "/")
-        mvn_executable = "mvn.cmd" if platform.system() == "Windows" else "mvn"
-        result = subprocess.run(
-            [
-                mvn_executable,
-                "-B",
-                "versions:use-latest-releases",
-                f"-Dmaven.version.rules=file://{rules}",
-                "-DallowMajorUpdates=false",
-            ],
-            cwd=self.git.dir,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        maven_output = self.maven.run(
+            "-B",
+            "versions:use-latest-releases",
+            f"-Dmaven.version.rules=file://{rules}",
+            "-DallowMajorUpdates=false",
         )
-        maven_output = result.stdout.strip()
-        if result.returncode != 0:
-            raise ChildProcessError(maven_output)
         return filter_maven_output(maven_output)
 
     def update_properties(self):
@@ -107,56 +113,26 @@ class MavenFix:
         )
         # hack for running on Windows
         rules = "/" + rules.replace("\\", "/")
-        mvn_executable = "mvn.cmd" if platform.system() == "Windows" else "mvn"
-        result = subprocess.run(
-            [
-                mvn_executable,
-                "-B",
-                "versions:update-properties",
-                f"-Dmaven.version.rules=file://{rules}",
-                "-DallowMajorUpdates=false",
-            ],
-            cwd=self.git.dir,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        maven_output = self.maven.run(
+            "-B",
+            "versions:update-properties",
+            f"-Dmaven.version.rules=file://{rules}",
+            "-DallowMajorUpdates=false",
         )
-        maven_output = result.stdout.strip()
-        if result.returncode != 0:
-            raise ChildProcessError(maven_output)
         return filter_maven_output(maven_output)
 
     def update_parent(self):
-        mvn_executable = "mvn.cmd" if platform.system() == "Windows" else "mvn"
-        result = subprocess.run(
-            [
-                mvn_executable,
-                "-B",
-                "versions:update-parent",
-            ],
-            cwd=self.git.dir,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        maven_output = self.maven.run(
+            "-B",
+            "versions:update-parent",
         )
-        maven_output = result.stdout.strip()
-        if result.returncode != 0:
-            raise ChildProcessError(maven_output)
         return filter_maven_output(maven_output)
 
     def sort_pom(self):
-        mvn_executable = "mvn.cmd" if platform.system() == "Windows" else "mvn"
-        subprocess.run(
-            [
-                mvn_executable,
-                "-B",
-                "com.github.ekryd.sortpom:sortpom-maven-plugin:sort",
-                "-Dsort.createBackupFile=false",
-            ],
-            cwd=self.git.dir,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        self.maven.run(
+            "-B",
+            "com.github.ekryd.sortpom:sortpom-maven-plugin:sort",
+            "-Dsort.createBackupFile=false",
         )
 
 
@@ -198,7 +174,46 @@ def filter_line(line: str) -> bool:
     return True
 
 
-def get_latest_artifact_version(group_id: str, artifact_id: str) -> str:
+def get_latest_artifact_version(group_id: str, artifact_id: str) -> Optional[str]:
+    """
+    Gets the latest published artifact version from central maven.
+
+    Example url: https://repo1.maven.org/maven2/com/github/ngeor/archetype-quickstart-jdk8/maven-metadata.xml
+
+    File structure:
+
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <metadata>
+        <groupId>com.github.ngeor</groupId>
+        <artifactId>archetype-quickstart-jdk8</artifactId>
+        <versioning>
+            <latest>2.8.0</latest>
+            <release>2.8.0</release>
+            <versions>
+                <version>1.0.14</version>
+                <version>1.0.22</version>
+                <version>1.0.27</version>
+                <version>1.0.29</version>
+                <version>1.1.0</version>
+                <version>1.1.1</version>
+                <version>1.1.2</version>
+                <version>1.2.0</version>
+                <version>1.3.0</version>
+                <version>1.4.0</version>
+                <version>2.0.0</version>
+                <version>2.1.0</version>
+                <version>2.2.0</version>
+                <version>2.3.0</version>
+                <version>2.4.0</version>
+                <version>2.5.0</version>
+                <version>2.8.0</version>
+            </versions>
+            <lastUpdated>20210925070507</lastUpdated>
+        </versioning>
+    </metadata>
+    ```
+    """
     group_path = group_id.replace(".", "/")
     url = (
         f"https://repo1.maven.org/maven2/{group_path}/{artifact_id}/maven-metadata.xml"
@@ -207,8 +222,13 @@ def get_latest_artifact_version(group_id: str, artifact_id: str) -> str:
     response.raise_for_status()
     root = ET.fromstring(response.text)
     versioning = root.find("versioning")
-    release = versioning.find("release")
-    return release.text
+    if versioning is not None:
+        release = versioning.find("release")
+        if release is not None:
+            return release.text
+
+    logging.warning("URL %s returned unexpected XML", url)
+    return None
 
 
 MAVEN_YML = """# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
@@ -240,7 +260,7 @@ jobs:
 """
 
 
-class MustHaveMavenGitHubWorkflow(MissingFileFix):
+class MustHaveMavenGitHubWorkflowFix(MissingFileFix):
     """If missing, adds a GitHub action Maven build workflow"""
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
@@ -251,3 +271,177 @@ class MustHaveMavenGitHubWorkflow(MissingFileFix):
 
     def get_contents(self):
         return MAVEN_YML
+
+
+class MavenBadgesFix:
+    """Fixes badges for Maven libraries"""
+
+    def __init__(
+        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+    ):
+        self.git = git
+        self.repo = repo
+        self.maven = Maven(git.dir)
+
+    def run(self):
+        if not self.git.isfile("README.md"):
+            return []
+        if not self.git.isfile("pom.xml"):
+            return []
+
+        badges = self._badges_dict()
+
+        if not badges:
+            return []
+
+        with open(self.git.join("README.md"), "r", encoding="utf-8") as file:
+            before_badges, existing_badges, after_badges = locate_badges(file.read())
+            has_changes = False
+            for i in range(len(existing_badges)):
+                existing_badge = existing_badges[i]
+                for needle, markdown in list(badges.items()):
+                    if needle in existing_badge:
+                        # delete the badge from the dictionary
+                        # so that we don't add it again later
+                        del badges[needle]
+                        if existing_badge != markdown:
+                            has_changes = True
+                            existing_badges[i] = markdown
+                        break
+            if badges:
+                existing_badges.extend(badges.values())
+                has_changes = True
+        if not has_changes:
+            return []
+        with open(self.git.join("README.md"), "w", encoding="utf-8") as file:
+            file.write(merge_badges(before_badges, existing_badges, after_badges))
+        self.git.add("README.md")
+        msg = "Updated Maven badges in README.md"
+        self.git.commit(msg)
+        return [msg]
+
+    def _badges_dict(self):
+        badges = {}
+        badges |= self._github_actions_badge()
+        badges |= self._effective_pom_badges()
+        return badges
+
+    def _github_actions_badge(self):
+        if self.git.isfile(".github", "workflows", "maven.yml"):
+            needle = "actions/workflows"
+            markdown = f"[![Java CI with Maven](https://github.com/{self.repo.full_name}/actions/workflows/maven.yml/badge.svg)](https://github.com/{self.repo.full_name}/actions/workflows/maven.yml)"
+            return {needle: markdown}
+        return {}
+
+    def _effective_pom_badges(self):
+        badges = {}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            filename = os.path.join(tmp_dir, "pom.xml")
+            self.maven.run("-B", "help:effective-pom", f"-Doutput={filename}")
+            tree = instarepo.xml_utils.parse(filename)
+            root = tree.getroot()
+            badges |= maven_central_badge(root)
+            # edge case for checkstyle-rules artifact which has to publish
+            # javadoc but doesn't have any source code
+            if self.git.isdir("src", "main", "java"):
+                badges |= javadoc_badge(root)
+        return badges
+
+
+def maven_central_badge(root: ET.Element):
+    group_id = root.findtext("{http://maven.apache.org/POM/4.0.0}groupId")
+    if not group_id:
+        return {}
+    artifact_id = root.findtext("{http://maven.apache.org/POM/4.0.0}artifactId")
+    if not artifact_id:
+        return {}
+    group_id_as_path = group_id.replace(".", "/")
+    url = f"https://repo1.maven.org/maven2/{group_id_as_path}/{artifact_id}/"
+    response = requests.get(url)
+    if not response.ok:
+        return {}
+    needle = "maven-central"
+    markdown = f"[![Maven Central](https://img.shields.io/maven-central/v/{group_id}/{artifact_id}.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22{group_id}%22%20AND%20a:%22{artifact_id}%22)"
+    return {needle: markdown}
+
+
+def javadoc_badge(root: ET.Element):
+    plugins = instarepo.xml_utils.find(
+        root,
+        "{http://maven.apache.org/POM/4.0.0}build",
+        "{http://maven.apache.org/POM/4.0.0}plugins",
+    )
+    if plugins is None:
+        return {}
+    uses_maven_source_plugin = False
+    uses_maven_javadoc_plugin = False
+    for plugin in plugins:
+        plugin_artifact_id = plugin.findtext(
+            "{http://maven.apache.org/POM/4.0.0}artifactId"
+        )
+        if plugin_artifact_id == "maven-source-plugin":
+            if "jar-no-fork" in plugin_goals(plugin):
+                uses_maven_source_plugin = True
+        if plugin_artifact_id == "maven-javadoc-plugin":
+            if "jar" in plugin_goals(plugin):
+                uses_maven_javadoc_plugin = True
+    if not (uses_maven_source_plugin and uses_maven_javadoc_plugin):
+        return {}
+    group_id = root.findtext("{http://maven.apache.org/POM/4.0.0}groupId")
+    if not group_id:
+        return {}
+    artifact_id = root.findtext("{http://maven.apache.org/POM/4.0.0}artifactId")
+    if not artifact_id:
+        return {}
+    needle = "javadoc"
+    markdown = f"[![javadoc](https://javadoc.io/badge2/{group_id}/{artifact_id}/javadoc.svg)](https://javadoc.io/doc/{group_id}/{artifact_id})"
+    return {needle: markdown}
+
+
+def plugin_goals(plugin: ET.Element):
+    executions = plugin.find("{http://maven.apache.org/POM/4.0.0}executions")
+    if executions is None:
+        return set()
+    executions = executions.findall("{http://maven.apache.org/POM/4.0.0}execution")
+    goals = map(
+        lambda x: x.find("{http://maven.apache.org/POM/4.0.0}goals"),
+        executions,
+    )
+    goals = [x for x in goals if x]
+    return set(
+        y.text
+        for x in goals
+        for y in x.findall("{http://maven.apache.org/POM/4.0.0}goal")
+        if y.text
+    )
+
+
+class Maven:
+    """
+    Runs Maven commands.
+    """
+
+    def __init__(self, directory: str):
+        """
+        Creates an instance of this class.
+
+        :param directory: The directory of a Maven project
+        """
+        self.directory = directory
+
+    def run(self, *args) -> str:
+        """
+        Runs Maven commands.
+        """
+        mvn_executable = "mvn.cmd" if platform.system() == "Windows" else "mvn"
+        result = subprocess.run(
+            [mvn_executable, *args],
+            cwd=self.directory,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        maven_output = result.stdout.strip()
+        if result.returncode != 0:
+            raise ChildProcessError(maven_output)
+        return maven_output

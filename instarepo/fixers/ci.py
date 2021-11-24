@@ -8,7 +8,7 @@ import instarepo.fixers.base
 import instarepo.git
 
 
-class NoTravis:
+class NoTravisFix:
     """Removes the .travis.yml file"""
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
@@ -25,7 +25,7 @@ class NoTravis:
         return [msg]
 
 
-class NoTravisBadge(instarepo.fixers.base.SingleFileFix):
+class NoTravisBadgeFix(instarepo.fixers.base.SingleFileFix):
     """Removes the Travis badge from README files"""
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):

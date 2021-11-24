@@ -197,7 +197,11 @@ def fixer_class_to_fixer_key(clz):
     turn fixers on/off via the CLI.
     """
     my_module: str = clz.__module__.removeprefix("instarepo.fixers.")
-    return my_module + "." + pascal_case_to_underscore_case(clz.__name__)
+    return (
+        my_module
+        + "."
+        + pascal_case_to_underscore_case(clz.__name__.removesuffix("Fix"))
+    )
 
 
 def pascal_case_to_underscore_case(value: str) -> str:
@@ -260,7 +264,8 @@ def all_fixer_classes():
     for my_module in my_modules:
         my_classes = classes_in_module(my_module)
         for clz in my_classes:
-            yield clz
+            if clz.__name__.endswith("Fix"):
+                yield clz
 
 
 def classes_in_module(module):

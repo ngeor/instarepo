@@ -13,13 +13,13 @@ def parse(filename: str):
     return ET.parse(filename, parser=create_parser())
 
 
-def find_at_tree(tree, *args):
+def find_at_tree(tree: ET.ElementTree, *args):
     if tree is None:
         return None
     return find(tree.getroot(), *args)
 
 
-def find(node, *args) -> Optional[ET.Element]:
+def find(node: Optional[ET.Element], *args) -> Optional[ET.Element]:
     p = node
     for arg in args:
         if p is None:

@@ -38,7 +38,7 @@ def is_pascal_entry(entry):
     )
 
 
-class AutoFormat:
+class AutoFormatFix:
     """Automatically formats Pascal files with JEDI code format"""
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):

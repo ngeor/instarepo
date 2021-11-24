@@ -9,6 +9,7 @@ from .fix import (
     fixer_class_to_fixer_key,
     select_fixer_classes,
 )
+import instarepo.git
 
 
 class TestFormatBody:
@@ -65,14 +66,14 @@ def test_fixer_has_doc_string(fixer_class):  # pylint: disable=redefined-outer-n
 def test_fixer_class_to_fixer_key():
     """Tests various fixer classes can be mapped to a key"""
     assert (
-        fixer_class_to_fixer_key(instarepo.fixers.dotnet.MustHaveCSharpAppVeyor)
+        fixer_class_to_fixer_key(instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix)
         == "dotnet.must_have_c_sharp_app_veyor"
     )
 
 
 def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     """Tests that it is possible to instantiate all fixers"""
-    mock_git = ()
+    mock_git = instarepo.git.GitWorkingDir("/tmp")
     mock_github = ()
     mock_repo = ()
     instance = fixer_class(git=mock_git, repo=mock_repo, github=mock_github)
@@ -84,19 +85,20 @@ def test_select_fixer_classes():
     assert list(all_fixer_classes()) == list(select_fixer_classes())
     assert [
         instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
     ] == list(select_fixer_classes(only_fixers=["dotnet"]))
     assert [
         instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
         instarepo.fixers.maven.MavenFix,
-        instarepo.fixers.maven.MustHaveMavenGitHubWorkflow,
+        instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
+        instarepo.fixers.maven.MavenBadgesFix,
     ] == list(select_fixer_classes(only_fixers=["dotnet", "maven"]))
     with pytest.raises(ValueError):
         list(select_fixer_classes(only_fixers=["a"], except_fixers=["b"]))
     assert [
         instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyor,
+        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
     ] == list(
         select_fixer_classes(
             except_fixers=[

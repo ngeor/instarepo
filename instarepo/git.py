@@ -1,4 +1,5 @@
 import datetime
+import os.path
 import subprocess
 
 
@@ -6,6 +7,15 @@ class GitWorkingDir:
     def __init__(self, directory: str, quiet: bool = False):
         self.dir = directory
         self.quiet = quiet
+
+    def join(self, *args) -> str:
+        return os.path.join(self.dir, *args)
+
+    def isfile(self, *args) -> bool:
+        return os.path.isfile(self.join(*args))
+
+    def isdir(self, *args) -> bool:
+        return os.path.isdir(self.join(*args))
 
     def create_branch(self, name: str) -> None:
         args = ["git", "checkout"]

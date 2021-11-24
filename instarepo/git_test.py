@@ -112,3 +112,9 @@ def test_push(mocker: MockerFixture):
     mock.assert_called_once_with(
         ["git", "push", "-u", "origin", "HEAD"], check=True, cwd="/tmp/hello"
     )
+
+
+def test_join():
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+    filename = git.join("src", "index.js").replace("\\", "/")
+    assert filename == "/tmp/hello/src/index.js"
