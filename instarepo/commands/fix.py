@@ -59,11 +59,7 @@ class FixCommand:
             logging.debug("Cloning repo into temp dir %s", tmpdirname)
             git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
             processor = RepoProcessor(
-                repo,
-                self.github,
-                git,
-                self.fixer_classes,
-                self.dry_run,
+                repo, self.github, git, self.fixer_classes, self.dry_run, self.verbose
             )
             processor.process()
 
@@ -76,6 +72,7 @@ class RepoProcessor:
         git: instarepo.git.GitWorkingDir,
         fixer_classes,
         dry_run: bool = False,
+        verbose: bool = False,
     ):
         self.repo = repo
         self.github = github
@@ -83,6 +80,7 @@ class RepoProcessor:
         self.fixer_classes = fixer_classes
         self.dry_run = dry_run
         self.branch_name = "instarepo_branch"
+        self.verbose = verbose
 
     def process(self):
         self.prepare()
@@ -129,7 +127,9 @@ class RepoProcessor:
         )
 
     def _create_fixer(self, fixer_class):
-        return fixer_class(git=self.git, repo=self.repo, github=self.github)
+        return fixer_class(
+            git=self.git, repo=self.repo, github=self.github, verbose=self.verbose
+        )
 
     def has_changes(self):
         current_sha = self.git.rev_parse(self.branch_name)

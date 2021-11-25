@@ -76,7 +76,9 @@ def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     mock_git = instarepo.git.GitWorkingDir("/tmp")
     mock_github = ()
     mock_repo = ()
-    instance = fixer_class(git=mock_git, repo=mock_repo, github=mock_github)
+    instance = fixer_class(
+        git=mock_git, repo=mock_repo, github=mock_github, verbose=False
+    )
     assert instance
 
 

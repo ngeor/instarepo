@@ -41,10 +41,11 @@ def is_pascal_entry(entry):
 class AutoFormatFix:
     """Automatically formats Pascal files with JEDI code format"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
+    def __init__(self, git: instarepo.git.GitWorkingDir, verbose: bool, **kwargs):
         self.git = git
         self.files = []
         self._fallback_ptop_cfg = None
+        self.verbose = verbose
 
     def run(self):
         if not os.path.isfile(JCF_EXE):
@@ -68,7 +69,15 @@ class AutoFormatFix:
             old_contents = f.read()
         rel_path = os.path.relpath(pas_file, self.git.dir)
         # pass through jcf
-        subprocess.run(self._build_args(rel_path), check=True, cwd=self.git.dir)
+        if self.verbose:
+            subprocess.run(self._build_args(rel_path), check=True, cwd=self.git.dir)
+        else:
+            subprocess.run(
+                self._build_args(rel_path),
+                check=True,
+                cwd=self.git.dir,
+                stdout=subprocess.PIPE,
+            )
         # trim trailing whitespace
         trim_trailing_whitespace(pas_file)
         # check if we have changes
