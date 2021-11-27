@@ -129,11 +129,7 @@ class MavenFix:
         return filter_maven_output(maven_output)
 
     def sort_pom(self):
-        self.maven.run(
-            "-B",
-            "com.github.ekryd.sortpom:sortpom-maven-plugin:sort",
-            "-Dsort.createBackupFile=false",
-        )
+        self.maven.sort_pom()
 
 
 LOG_LEVEL = re.compile(r"^\[[A-Z]+\]")
@@ -445,3 +441,80 @@ class Maven:
         if result.returncode != 0:
             raise ChildProcessError(maven_output)
         return maven_output
+
+    def sort_pom(self):
+        self.run(
+            "-B",
+            "com.github.ekryd.sortpom:sortpom-maven-plugin:sort",
+            "-Dsort.createBackupFile=false",
+        )
+
+
+class UrlFix:
+    """Ensures Maven projects have the correct URL and SCM sections"""
+
+    def __init__(
+        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+    ):
+        self.git = git
+        self.repo = repo
+
+    def run(self):
+        if not self.git.isfile("pom.xml"):
+            return []
+        try:
+            ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
+            return self.do_run()
+        finally:
+            ET.register_namespace("maven", "http://maven.apache.org/POM/4.0.0")
+
+    def do_run(self):
+        has_changes = False
+        tree = instarepo.xml_utils.parse(self.git.join("pom.xml"))
+        root = tree.getroot()
+        has_changes |= ensure_element(
+            root, "{http://maven.apache.org/POM/4.0.0}url", self.repo.html_url
+        )
+        scm = root.find("{http://maven.apache.org/POM/4.0.0}scm")
+        if scm is None:
+            has_changes = True
+            scm = ET.Element("{http://maven.apache.org/POM/4.0.0}scm")
+            root.append(scm)
+        has_changes |= ensure_element(
+            scm,
+            "{http://maven.apache.org/POM/4.0.0}connection",
+            f"scm:git:{self.repo.clone_url}",
+        )
+        has_changes |= ensure_element(
+            scm,
+            "{http://maven.apache.org/POM/4.0.0}developerConnection",
+            f"scm:git:{self.repo.ssh_url}",
+        )
+        has_changes |= ensure_element(
+            scm, "{http://maven.apache.org/POM/4.0.0}tag", "HEAD"
+        )
+        has_changes |= ensure_element(
+            scm, "{http://maven.apache.org/POM/4.0.0}url", self.repo.html_url
+        )
+        if has_changes:
+            tree.write(self.git.join("pom.xml"))
+            Maven(self.git.dir).sort_pom()
+            self.git.add("pom.xml")
+            msg = "Corrected url info in pom.xml"
+            self.git.commit(msg)
+            return [msg]
+
+        return []
+
+
+def ensure_element(parent: ET.Element, child_name: str, child_text: str) -> bool:
+    has_changes = False
+    child_element = parent.find(child_name)
+    if child_element is None:
+        has_changes = True
+        child_element = ET.Element(child_name)
+        parent.append(child_element)
+    if child_element.text != child_text:
+        has_changes = True
+        child_element.text = child_text
+    return has_changes

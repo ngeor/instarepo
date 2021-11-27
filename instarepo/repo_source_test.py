@@ -34,6 +34,8 @@ def dummy_repo(name: str) -> Repo:
         {
             "name": name,
             "archived": False,
+            "clone_url": "",
+            "html_url": "",
             "ssh_url": "",
             "default_branch": "",
             "full_name": "",

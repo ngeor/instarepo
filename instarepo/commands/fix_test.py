@@ -95,6 +95,7 @@ def test_select_fixer_classes():
         instarepo.fixers.maven.MavenFix,
         instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
         instarepo.fixers.maven.MavenBadgesFix,
+        instarepo.fixers.maven.UrlFix,
     ] == list(select_fixer_classes(only_fixers=["dotnet", "maven"]))
     with pytest.raises(ValueError):
         list(select_fixer_classes(only_fixers=["a"], except_fixers=["b"]))

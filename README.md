@@ -147,6 +147,8 @@ maven.must_have_maven_git_hub_workflow
     If missing, adds a GitHub action Maven build workflow
 maven.maven_badges
     Fixes badges for Maven libraries
+maven.url
+    Ensures Maven projects have the correct URL and SCM sections
 missing_files.must_have_readme
     Ensures that the repo has a readme file
 missing_files.must_have_editor_config

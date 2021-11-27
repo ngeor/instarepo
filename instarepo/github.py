@@ -7,6 +7,8 @@ class Repo:
     def __init__(self, repo_json):
         self.name: str = repo_json["name"]
         self.archived: bool = repo_json["archived"]
+        self.clone_url: str = repo_json["clone_url"]
+        self.html_url: str = repo_json["html_url"]
         self.ssh_url: str = repo_json["ssh_url"]
         self.default_branch: str = repo_json["default_branch"]
         self.full_name: str = repo_json["full_name"]
