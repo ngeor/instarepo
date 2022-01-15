@@ -9,7 +9,28 @@ class ListCommand:
         )
 
     def run(self):
-        print("repo", "language", "updated at")
-        repos = self.repo_source.get()
+        repos = list(self.repo_source.get())
+        default_language = "N/A"
+        max_repo_name_length = max(len(repo.name) for repo in repos)
+        max_language_length = max(
+            len(repo.language or default_language) for repo in repos
+        )
+        print(
+            "{0:{1}s} {2:{3}s} {4}".format(
+                "repo",
+                max_repo_name_length,
+                "language",
+                max_language_length,
+                "updated at",
+            )
+        )
         for repo in repos:
-            print(repo.name, repo.language, repo.updated_at)
+            print(
+                "{0:{1}s} {2:{3}s} {4}".format(
+                    repo.name,
+                    max_repo_name_length,
+                    repo.language or default_language,
+                    max_language_length,
+                    repo.updated_at,
+                )
+            )
