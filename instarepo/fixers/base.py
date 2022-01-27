@@ -70,7 +70,7 @@ class MissingFileFix:
         with open(full_filename, "w", encoding="utf8") as file:
             file.write(contents)
         self.git.add(relative_filename)
-        msg = "Adding " + relative_filename
+        msg = "chore: Adding " + relative_filename
         self.git.commit(msg)
         return [msg]
 

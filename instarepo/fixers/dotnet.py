@@ -67,7 +67,7 @@ class DotNetFrameworkVersionFix:
             )
         relpath = os.path.relpath(filename, self.git.dir)
         self.git.add(relpath)
-        msg = f"Upgraded {relpath} to .NET {desired_framework_version}"
+        msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
         self.git.commit(msg)
         self.result.append(msg)
 
@@ -90,7 +90,7 @@ class DotNetFrameworkVersionFix:
         )
         relpath = os.path.relpath(filename, self.git.dir)
         self.git.add(relpath)
-        msg = f"Upgraded {relpath} to .NET {desired_framework_version}"
+        msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
         self.git.commit(msg)
         self.result.append(msg)
 

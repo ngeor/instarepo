@@ -60,7 +60,7 @@ class AutoFormatFix:
                     self._process(entry.path)
         if len(self.files) <= 0:
             return []
-        msg = "Auto-formatted Pascal files: " + ", ".join(self.files)
+        msg = "chore: Auto-formatted Pascal files: " + ", ".join(self.files)
         self.git.commit(msg)
         return [msg]
 

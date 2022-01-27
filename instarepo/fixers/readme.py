@@ -26,7 +26,7 @@ class ReadmeImageFix(SingleFileFix):
         self, git: instarepo.git.GitWorkingDir, **kwargs
     ):  # pylint: disable=unused-argument
         """Creates an instance of this class"""
-        super().__init__(git, "README.md", "Fixed broken images in README")
+        super().__init__(git, "README.md", "fix: Fixed broken images in README")
 
     def convert(self, contents: str) -> str:
         return RE_MARKDOWN_IMAGE.sub(self.image_convert, contents)

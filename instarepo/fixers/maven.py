@@ -34,9 +34,9 @@ class MavenFix:
         self._full_filename = os.path.join(self.git.dir, "pom.xml")
         self._commits = []
         self.remove_snapshot_parent_pom()
-        self.run_step("Using latest releases", self.use_latest_releases)
-        self.run_step("Updated pom properties", self.update_properties)
-        self.run_step("Updated parent pom", self.update_parent)
+        self.run_step("chore(deps): Using latest releases", self.use_latest_releases)
+        self.run_step("chore(deps): Updated pom properties", self.update_properties)
+        self.run_step("chore(deps): Updated parent pom", self.update_parent)
         return self._commits
 
     def remove_snapshot_parent_pom(self):
@@ -78,7 +78,7 @@ class MavenFix:
             )
             self.sort_pom()
             self.git.add("pom.xml")
-            msg = "Corrected parent pom reference"
+            msg = "fix: Corrected parent pom reference"
             self.git.commit(msg)
             self._commits.append(msg)
 
