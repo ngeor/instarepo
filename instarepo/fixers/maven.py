@@ -34,9 +34,9 @@ class MavenFix:
         self._full_filename = os.path.join(self.git.dir, "pom.xml")
         self._commits = []
         self.remove_snapshot_parent_pom()
-        self.run_step("chore(deps): Using latest releases", self.use_latest_releases)
-        self.run_step("chore(deps): Updated pom properties", self.update_properties)
-        self.run_step("chore(deps): Updated parent pom", self.update_parent)
+        self.run_step("chore(deps)", "Using latest releases", self.use_latest_releases)
+        self.run_step("chore(deps)", "Updated pom properties", self.update_properties)
+        self.run_step("chore(deps)", "Updated parent pom", self.update_parent)
         return self._commits
 
     def remove_snapshot_parent_pom(self):
@@ -82,14 +82,22 @@ class MavenFix:
             self.git.commit(msg)
             self._commits.append(msg)
 
-    def run_step(self, title: str, step_function):
+    def run_step(self, commit_prefix: str, title_fallback: str, step_function):
         old_modified_time = os.path.getmtime(self._full_filename)
         output = step_function()
         had_changes = old_modified_time != os.path.getmtime(self._full_filename)
         if had_changes:
             self.sort_pom()
             self.git.add("pom.xml")
-            msg = title + "\n\n" + output + "\n"
+            if "\n" in output:
+                # multi-line output (multiple versions upgraded)
+                msg = commit_prefix + ": " + title_fallback + "\n\n" + output + "\n"
+            elif not output:
+                # no output?
+                msg = commit_prefix + ": " + title_fallback
+            else:
+                # single line output
+                msg = commit_prefix + ": " + output
             self.git.commit(msg)
             self._commits.append(msg)
 
@@ -137,12 +145,12 @@ LOG_LEVEL = re.compile(r"^\[[A-Z]+\]")
 
 def filter_maven_output(output: str) -> str:
     lines = output.splitlines()
-    modified_lines = (map_line(line) for line in lines)
+    modified_lines = (strip_log_level(line) for line in lines)
     filtered_lines = (line for line in modified_lines if filter_line(line))
     return os.linesep.join(filtered_lines)
 
 
-def map_line(line: str) -> str:
+def strip_log_level(line: str) -> str:
     line = LOG_LEVEL.sub("", line)
     line = line.strip()
     return line
@@ -151,23 +159,14 @@ def map_line(line: str) -> str:
 def filter_line(line: str) -> bool:
     if not line:
         return False
-    deny_prefixes = [
-        "Scanning",
-        "-",
-        "Building",
-        "artifact",
-        "Downloading",
-        "Downloaded",
-        "BUILD",
-        "Total",
-        "Finished",
-        "Minor version",
-        "Reactor ",
+    allow_prefixes = [
+        "Updated ",
+        "Updating "
     ]
-    for deny_prefix in deny_prefixes:
-        if line.startswith(deny_prefix):
-            return False
-    return True
+    for allow_prefix in allow_prefixes:
+        if line.startswith(allow_prefix):
+            return True
+    return False
 
 
 def get_latest_artifact_version(group_id: str, artifact_id: str) -> Optional[str]:

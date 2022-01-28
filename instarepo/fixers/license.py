@@ -51,7 +51,7 @@ class CopyrightYearFix:
         with open(filename, "w", encoding="utf8") as f:
             f.write(new_contents)
         self.git.add("LICENSE")
-        msg = "Updated copyright year in LICENSE"
+        msg = "chore: Updated copyright year in LICENSE"
         self.git.commit(msg)
         return [msg]
 
