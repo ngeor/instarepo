@@ -1,12 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.2.0] - 2022-01-29
 
 ### Features
 
 - Pretty print list output
 - Use conventional commit messages
+- Using git-cliff to generate changelog
+- If Maven output consists of a single version update, add a single line commit
+- Allow filtering repos based on when they had changes pushed to them
+
+### Miscellaneous Tasks
+
+- Updated copyright year in LICENSE
 
 ## [0.1.0] - 2021-11-17
 
