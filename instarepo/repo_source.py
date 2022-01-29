@@ -1,7 +1,9 @@
-from typing import Iterable
+from datetime import datetime, timedelta, timezone
+from typing import Iterable, Optional
 from enum import Enum, auto, unique
 
 import requests
+import requests.auth
 import instarepo.github
 
 
@@ -52,6 +54,8 @@ class RepoSource:
         forks: FilterMode,
         repo_prefix: StringFilter,
         language: StringFilter,
+        pushed_after,
+        pushed_before,
     ):
         """
         Creates an instance of this class
@@ -65,6 +69,8 @@ class RepoSource:
         :param forks: Determines how to filter forks
         :param repo_prefix: Optionally filter repositories whose name starts with this prefix
         :param language: Optionally filter repositories by their language
+        :param pushed_after: Optionally filter repositories that were pushed after the given timedelta
+        :param pushed_before: Optionally filter repositories that were pushed before the given timedelta
         """
         self.github = github
         self.sort = sort
@@ -73,16 +79,22 @@ class RepoSource:
         self.forks = forks
         self.repo_prefix = repo_prefix
         self.language = language
+        self.pushed_after = pushed_after
+        self.pushed_before = pushed_before
 
     def get(self) -> Iterable[instarepo.github.Repo]:
         """
         Retrieves repository information from GitHub.
         """
-        return self._filter_language(
-            self._filter_prefix(
-                self._filter_forks(
-                    self._filter_archived(
-                        self.github.get_all_repos(self.sort, self.direction)
+        return self._filter_pushed_after(
+            self._filter_pushed_before(
+                self._filter_language(
+                    self._filter_prefix(
+                        self._filter_forks(
+                            self._filter_archived(
+                                self.github.get_all_repos(self.sort, self.direction)
+                            )
+                        )
                     )
                 )
             )
@@ -110,6 +122,26 @@ class RepoSource:
     def _filter_language(self, repos: Iterable[instarepo.github.Repo]):
         return filter_by_language(repos, self.language)
 
+    def _filter_pushed_after(self, repos: Iterable[instarepo.github.Repo]):
+        if self.pushed_after:
+            return (
+                repo
+                for repo in repos
+                if repo.pushed_at + self.pushed_after > datetime.now(timezone.utc)
+            )
+        else:
+            return repos
+
+    def _filter_pushed_before(self, repos: Iterable[instarepo.github.Repo]):
+        if self.pushed_before:
+            return (
+                repo
+                for repo in repos
+                if repo.pushed_at + self.pushed_before < datetime.now(timezone.utc)
+            )
+        else:
+            return repos
+
 
 class RepoSourceBuilder:
     """
@@ -122,12 +154,14 @@ class RepoSourceBuilder:
 
         """
         self.github = None
-        self.sort = None
-        self.direction = None
+        self.sort: str = ""
+        self.direction: str = ""
         self.archived = FilterMode.DENY
         self.forks = FilterMode.DENY
         self.repo_prefix = StringFilter()
         self.language = StringFilter()
+        self.pushed_after = None
+        self.pushed_before = None
 
     def with_github(self, github: instarepo.github.GitHub):
         """
@@ -164,6 +198,9 @@ class RepoSourceBuilder:
         elif args.except_language:
             self.language = StringFilter(args.except_language, FilterMode.DENY)
 
+        self.pushed_after = parse_timedelta(args.pushed_after)
+        self.pushed_before = parse_timedelta(args.pushed_before)
+
         return self
 
     def build(self):
@@ -180,11 +217,13 @@ class RepoSourceBuilder:
             self.forks,
             self.repo_prefix,
             self.language,
+            self.pushed_after,
+            self.pushed_before,
         )
 
 
 def filter_by_name_prefix(
-    repos: Iterable[instarepo.github.Repo], string_filter: StringFilter
+    repos: Iterable[instarepo.github.Repo], string_filter: Optional[StringFilter]
 ) -> Iterable[instarepo.github.Repo]:
     if (
         not string_filter
@@ -217,3 +256,18 @@ def filter_by_language(
             return (repo for repo in repos if repo.language)
     else:
         raise ValueError("Invalid filter mode " + string_filter.mode)
+
+
+def parse_timedelta(value: Optional[str]):
+    if not value:
+        return None
+    unit = value[-1]
+    amount = int(value[0:-1])
+    if unit == "h":
+        return timedelta(hours=amount)
+    elif unit == "m":
+        return timedelta(minutes=amount)
+    elif unit == "d":
+        return timedelta(days=amount)
+    else:
+        raise ValueError(f"Invalid time unit: {value}")

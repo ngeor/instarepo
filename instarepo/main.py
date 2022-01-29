@@ -170,24 +170,20 @@ def _add_filter_options(parser: argparse.ArgumentParser):
     language_group = parser.add_mutually_exclusive_group()
     language_group.add_argument(
         "--only-language",
-        action="store",
         help="Only process repositories of the given programming language",
     )
     language_group.add_argument(
         "--except-language",
-        action="store",
         help="Do not process repositories of the given programming language",
     )
 
     prefix_group = parser.add_mutually_exclusive_group()
     prefix_group.add_argument(
         "--only-name-prefix",
-        action="store",
         help="Only process repositories whose name starts with the given prefix",
     )
     prefix_group.add_argument(
         "--except-name-prefix",
-        action="store",
         help="Do not process repositories whose name starts with the given prefix",
     )
 
@@ -195,10 +191,17 @@ def _add_filter_options(parser: argparse.ArgumentParser):
 
     filter_group.add_argument(
         "--forks",
-        action="store",
         default="deny",
         choices=["allow", "deny", "only"],
         help="Filter forks",
+    )
+    filter_group.add_argument(
+        "--pushed-after",
+        help="Only process repositories that had changes pushed after the given time interval e.g. 4h",
+    )
+    filter_group.add_argument(
+        "--pushed-before",
+        help="Only process repositories that had changes pushed before the given time interval e.g. 4h",
     )
 
 

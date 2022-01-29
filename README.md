@@ -39,21 +39,29 @@ Lists the repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py list [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+usage: main.py list [-h] -u USER -t TOKEN
+                    [--sort {full_name,created,updated,pushed}]
+                    [--direction {asc,desc}]
                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                     [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                    [--forks {allow,deny,only}] [--archived {allow,deny,only}]
+                    [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
+                    [--pushed-before PUSHED_BEFORE]
+                    [--archived {allow,deny,only}]
 
 optional arguments:
   -h, --help            show this help message and exit
   --only-language ONLY_LANGUAGE
-                        Only process repositories of the given programming language
+                        Only process repositories of the given programming
+                        language
   --except-language EXCEPT_LANGUAGE
-                        Do not process repositories of the given programming language
+                        Do not process repositories of the given programming
+                        language
   --only-name-prefix ONLY_NAME_PREFIX
-                        Only process repositories whose name starts with the given prefix
+                        Only process repositories whose name starts with the
+                        given prefix
   --except-name-prefix EXCEPT_NAME_PREFIX
-                        Do not process repositories whose name starts with the given prefix
+                        Do not process repositories whose name starts with the
+                        given prefix
   --archived {allow,deny,only}
                         Filter archived repositories
 
@@ -69,6 +77,12 @@ Sorting:
 Filtering:
   --forks {allow,deny,only}
                         Filter forks
+  --pushed-after PUSHED_AFTER
+                        Only process repositories that had changes pushed
+                        after the given time interval e.g. 4h
+  --pushed-before PUSHED_BEFORE
+                        Only process repositories that had changes pushed
+                        before the given time interval e.g. 4h
 
 Example:
     pipenv run python -m instarepo.main list -u USER -t TOKEN
@@ -87,10 +101,14 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: main.py fix [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+usage: main.py fix [-h] -u USER -t TOKEN
+                   [--sort {full_name,created,updated,pushed}]
+                   [--direction {asc,desc}]
                    [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                    [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                   [--forks {allow,deny,only}] [--dry-run] [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
+                   [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
+                   [--pushed-before PUSHED_BEFORE] [--dry-run]
+                   [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
                    --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
 
 Runs automatic fixes on the repositories
@@ -98,13 +116,17 @@ Runs automatic fixes on the repositories
 optional arguments:
   -h, --help            show this help message and exit
   --only-language ONLY_LANGUAGE
-                        Only process repositories of the given programming language
+                        Only process repositories of the given programming
+                        language
   --except-language EXCEPT_LANGUAGE
-                        Do not process repositories of the given programming language
+                        Do not process repositories of the given programming
+                        language
   --only-name-prefix ONLY_NAME_PREFIX
-                        Only process repositories whose name starts with the given prefix
+                        Only process repositories whose name starts with the
+                        given prefix
   --except-name-prefix EXCEPT_NAME_PREFIX
-                        Do not process repositories whose name starts with the given prefix
+                        Do not process repositories whose name starts with the
+                        given prefix
   --dry-run             Do not actually push and create MR
   --only-fixers ONLY_FIXERS [ONLY_FIXERS ...]
                         Only run fixers that have the given prefixes
@@ -123,6 +145,12 @@ Sorting:
 Filtering:
   --forks {allow,deny,only}
                         Filter forks
+  --pushed-after PUSHED_AFTER
+                        Only process repositories that had changes pushed
+                        after the given time interval e.g. 4h
+  --pushed-before PUSHED_BEFORE
+                        Only process repositories that had changes pushed
+                        before the given time interval e.g. 4h
 
 Example:
     pipenv run python -m instarepo.main fix -u USER -t TOKEN
@@ -233,22 +261,31 @@ Analyzes repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py analyze [-h] -u USER -t TOKEN [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+usage: main.py analyze [-h] -u USER -t TOKEN
+                       [--sort {full_name,created,updated,pushed}]
+                       [--direction {asc,desc}]
                        [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                        [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                       [--forks {allow,deny,only}] [--archived {allow,deny,only}] --since SINCE
+                       [--forks {allow,deny,only}]
+                       [--pushed-after PUSHED_AFTER]
+                       [--pushed-before PUSHED_BEFORE]
+                       [--archived {allow,deny,only}] --since SINCE
                        [--metric {commits,files}]
 
 optional arguments:
   -h, --help            show this help message and exit
   --only-language ONLY_LANGUAGE
-                        Only process repositories of the given programming language
+                        Only process repositories of the given programming
+                        language
   --except-language EXCEPT_LANGUAGE
-                        Do not process repositories of the given programming language
+                        Do not process repositories of the given programming
+                        language
   --only-name-prefix ONLY_NAME_PREFIX
-                        Only process repositories whose name starts with the given prefix
+                        Only process repositories whose name starts with the
+                        given prefix
   --except-name-prefix EXCEPT_NAME_PREFIX
-                        Do not process repositories whose name starts with the given prefix
+                        Do not process repositories whose name starts with the
+                        given prefix
   --archived {allow,deny,only}
                         Filter archived repositories
   --since SINCE         The start date of the analysis (YYYY-mm-dd)
@@ -267,6 +304,12 @@ Sorting:
 Filtering:
   --forks {allow,deny,only}
                         Filter forks
+  --pushed-after PUSHED_AFTER
+                        Only process repositories that had changes pushed
+                        after the given time interval e.g. 4h
+  --pushed-before PUSHED_BEFORE
+                        Only process repositories that had changes pushed
+                        before the given time interval e.g. 4h
 
 Example:
     pipenv run python -m instarepo.main analyze -u USER -t TOKEN --since 2021-11-06

@@ -10,6 +10,9 @@ class ListCommand:
 
     def run(self):
         repos = list(self.repo_source.get())
+        if not repos:
+            print("No repos found")
+            return
         default_language = "N/A"
         max_repo_name_length = max(len(repo.name) for repo in repos)
         max_language_length = max(

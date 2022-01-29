@@ -159,10 +159,7 @@ def strip_log_level(line: str) -> str:
 def filter_line(line: str) -> bool:
     if not line:
         return False
-    allow_prefixes = [
-        "Updated ",
-        "Updating "
-    ]
+    allow_prefixes = ["Updated ", "Updating "]
     for allow_prefix in allow_prefixes:
         if line.startswith(allow_prefix):
             return True
