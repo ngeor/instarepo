@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2022-01-30
+
+### Features
+
+- Add git-cliff support
+- Use funding.yml from user-templates
+
 ## [0.2.0] - 2022-01-29
 
 ### Features
