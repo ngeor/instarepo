@@ -1,2 +1,5 @@
 __pycache__/
 .pytest_cache/
+
+# template user-defined files
+user-templates/

@@ -186,7 +186,11 @@ missing_files.must_have_readme
 missing_files.must_have_editor_config
     Ensures an editorconfig file exists
 missing_files.must_have_git_hub_funding
-    Ensures a GitHub funding file exists
+
+    Ensures a GitHub funding file exists (.github/FUNDING.yml).
+    The rule will use the FUNDING.yml file from `user-templates/.github/FUNDING.yml`,
+    if one exists.
+
 missing_files.must_have_git_ignore
     Ensures a .gitignore file exists
 pascal.auto_format

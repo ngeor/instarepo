@@ -1,3 +1,4 @@
+import os.path
 import requests
 import instarepo.git
 import instarepo.github
@@ -47,35 +48,36 @@ class MustHaveEditorConfigFix(MissingFileFix):
         return EDITOR_CONFIG
 
 
-FUNDING_YML = """# These are supported funding model platforms
-
-github: # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
-patreon: # Replace with a single Patreon username
-open_collective: # Replace with a single Open Collective username
-ko_fi: # Replace with a single Ko-fi username
-tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
-community_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry
-liberapay: # Replace with a single Liberapay username
-issuehunt: # Replace with a single IssueHunt username
-otechie: # Replace with a single Otechie username
-custom: ['https://ngeor.com/support/']
-"""
-
-
 class MustHaveGitHubFundingFix(MissingFileFix):
-    """Ensures a GitHub funding file exists"""
+    """
+    Ensures a GitHub funding file exists (.github/FUNDING.yml).
+    The rule will use the FUNDING.yml file from `user-templates/.github/FUNDING.yml`,
+    if one exists.
+    """
 
     def __init__(
         self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
     ):
         super().__init__(git, ".github/FUNDING.yml")
         self.repo = repo
+        template = os.path.join(
+            os.path.basename(__file__),
+            "..",
+            "..",
+            "user-templates",
+            ".github",
+            "FUNDING.yml",
+        )
+        self.contents = ""
+        if os.path.isfile(template):
+            with open(template, "r", encoding="utf-8") as file:
+                self.contents = file.read()
 
     def should_process_repo(self):
-        return not self.repo.private and not self.repo.fork
+        return not self.repo.private and not self.repo.fork and self.contents
 
     def get_contents(self):
-        return FUNDING_YML
+        return self.contents
 
 
 class MustHaveGitIgnoreFix(MissingFileFix):
