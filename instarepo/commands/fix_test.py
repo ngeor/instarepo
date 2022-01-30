@@ -105,6 +105,7 @@ def test_select_fixer_classes():
     ] == list(
         select_fixer_classes(
             except_fixers=[
+                "changelog",
                 "ci",
                 "license",
                 "maven",

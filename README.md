@@ -157,6 +157,10 @@ Example:
 
 Fixers:
 
+changelog.must_have_cliff_toml
+    Ensures the configuration for git-cliff (cliff.toml) exists
+changelog.generate_changelog
+    Generates changelog with git-cliff
 ci.no_travis
     Removes the .travis.yml file
 ci.no_travis_badge
@@ -183,6 +187,8 @@ missing_files.must_have_editor_config
     Ensures an editorconfig file exists
 missing_files.must_have_git_hub_funding
     Ensures a GitHub funding file exists
+missing_files.must_have_git_ignore
+    Ensures a .gitignore file exists
 pascal.auto_format
     Automatically formats Pascal files with JEDI code format
 readme.readme_image
@@ -198,61 +204,6 @@ repo_description.repo_description
     Note: this fixer does not create an MR, it calls the
     GitHub REST API directly (https://docs.github.com/en/rest/reference/repos#update-a-repository).
 ```
-
-### Fixes
-
-#### Generic
-
-- `copyright_year`: Updates the copyright year in `LICENSE` file.
-- `must_have_editorconfig`: Ensures the repo has a `.editorconfig` file.
-- `must_have_github_funding`: Adds a funding yaml for GitHub
-- `must_have_license`: Ensures the repo has a `LICENSE` file.
-  Only runs for public repositories.
-  Adds the MIT License. The copyright owner is populated by
-  `git config user.name`.
-- `must_have_readme`: Ensures the repo has a `README.md` file.
-- `readme_image`: Attempts to detect and correct broken image links
-  inside the `README.md` file of your repo. Detects only images that
-  got moved from a subfolder into a parent folder (e.g. `/folder/photo.png`
-  that got moved to `/photo.png`).
-- `repo_description`: Updates the description of a GitHub repository
-  based on the `README.md` file. This fixer does _not_ create a MR,
-  instead it calls GitHub's REST API directly to change the metadata
-  of the repo. The description is the first line of the README file
-  that starts with a letter or with `>`.
-
-#### Dot Net
-
-- `dot_net_framework_version`: Ensures csproj and `web.config` files
-  target the desired version of .NET framework.
-- `must_have_csharp_app_veyor`: Adds an `appveyor.yml` file to .NET C# solutions.
-
-#### Maven
-
-- `maven`: Uses the version plugin to update dependencies.
-  Requires maven to be installed. Dependecies are updated with
-  [update-parent](https://www.mojohaus.org/versions-maven-plugin/update-parent-mojo.html),
-  [update-properties](https://www.mojohaus.org/versions-maven-plugin/update-properties-mojo.html),
-  and [use-latest-releases](https://www.mojohaus.org/versions-maven-plugin/use-latest-releases-mojo.html).
-  Major version updates are not allowed. Versions with patterns like `Beta` are not allowed.
-- `must_have_maven_github_workflow`: For projects that have a `pom.xml`, ensures a GitHub Actions workflow
-  that builds the project
-- `must_have_maven_gitignore`: For Maven projects (that have a `pom.xml`), adds
-  a `.gitignore` file copied from https://github.com/github/gitignore/blob/master/Maven.gitignore
-
-#### Pascal
-
-- `autoformat`: Autoformats Pascal source code with [JEDI Code Format](http://jedicodeformat.sourceforge.net/).
-  Prerequisites:
-  - The `JFC.exe` is located at `C:\opt\jcf_243_exe\JCF.exe`
-  - The configuration file is located at `%LOCALAPPDATA%\lazarus\jcfsettings.cfg`
-- `must_have_lazarus_gitignore`: For Lazarus projects, adds a `.gitignore` file
-
-#### VB6
-
-- `must_have_vb6_gitignore`: For Visual Basic projects and project groups,
-  adds a `.gitignore` file
-
 
 ## Analyze
 

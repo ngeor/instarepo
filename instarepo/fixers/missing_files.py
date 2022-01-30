@@ -78,7 +78,7 @@ class MustHaveGitHubFundingFix(MissingFileFix):
         return FUNDING_YML
 
 
-class MustHaveGitIgnore(MissingFileFix):
+class MustHaveGitIgnoreFix(MissingFileFix):
     """Ensures a .gitignore file exists"""
 
     LAZARUS_GITIGNORE = """*.o

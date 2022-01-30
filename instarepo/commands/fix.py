@@ -8,6 +8,7 @@ import instarepo.git
 import instarepo.github
 import instarepo.repo_source
 import instarepo.fixers.base
+import instarepo.fixers.changelog
 import instarepo.fixers.ci
 import instarepo.fixers.dotnet
 import instarepo.fixers.license
@@ -251,6 +252,7 @@ def _prefixes_of_fixer(fixer_class, all_prefixes: list[str]):
 def all_fixer_classes():
     """Gets all fixer classes"""
     my_modules = [
+        instarepo.fixers.changelog,
         instarepo.fixers.ci,
         instarepo.fixers.dotnet,
         instarepo.fixers.license,
