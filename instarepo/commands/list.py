@@ -24,7 +24,7 @@ class ListCommand:
                 max_repo_name_length,
                 "language",
                 max_language_length,
-                "updated at",
+                "pushed at",
             )
         )
         for repo in repos:
@@ -34,6 +34,6 @@ class ListCommand:
                     max_repo_name_length,
                     repo.language or default_language,
                     max_language_length,
-                    repo.updated_at,
+                    repo.pushed_at,
                 )
             )
