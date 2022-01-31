@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import xml.etree.ElementTree as ET
-from typing import Iterable
+from typing import Iterable, List
 
 import instarepo.git
 import instarepo.xml_utils
@@ -135,7 +135,7 @@ build:
 """
 
 
-def get_projects_from_sln_file(path: str) -> list[str]:
+def get_projects_from_sln_file(path: str) -> List[str]:
     """
     Gets the projects defined in a sln file.
 

@@ -4,7 +4,7 @@ Fixers for the README.md file
 
 import os.path
 import re
-from typing import Tuple
+from typing import List, Tuple
 
 import instarepo.git
 from .base import SingleFileFix
@@ -31,7 +31,7 @@ class ReadmeImageFix(SingleFileFix):
     def convert(self, contents: str) -> str:
         return RE_MARKDOWN_IMAGE.sub(self.image_convert, contents)
 
-    def image_convert(self, m: re.Match[str]) -> str:
+    def image_convert(self, m: re.Match) -> str:
         filename = m.group("filename")
         new_filename = self.find_new_filename(filename)
         return (
@@ -56,7 +56,7 @@ class ReadmeImageFix(SingleFileFix):
         return filename
 
 
-def locate_badges(readme_contents: str) -> Tuple[str, list[str], str]:
+def locate_badges(readme_contents: str) -> Tuple[str, List[str], str]:
     before_badges = []
     badges = []
     after_badges = []
@@ -86,29 +86,29 @@ def _is_badge_line(line: str) -> bool:
     return line.startswith("[![")
 
 
-def _join_lines(lines: list[str]) -> str:
+def _join_lines(lines: List[str]) -> str:
     return "\n".join(_strip_empty_lines(lines)) + "\n"
 
 
-def _strip_empty_lines(lines: list[str]) -> list[str]:
+def _strip_empty_lines(lines: List[str]) -> List[str]:
     return _strip_trailing_empty_lines(_strip_leading_empty_lines(lines))
 
 
-def _strip_leading_empty_lines(lines: list[str]) -> list[str]:
+def _strip_leading_empty_lines(lines: List[str]) -> List[str]:
     i = 0
     while i < len(lines) and len(lines[i]) == 0:
         i += 1
     return lines[i:]
 
 
-def _strip_trailing_empty_lines(lines: list[str]) -> list[str]:
+def _strip_trailing_empty_lines(lines: List[str]) -> List[str]:
     i = len(lines) - 1
     while i >= 0 and len(lines[i]) == 0:
         i -= 1
     return lines[0 : i + 1]
 
 
-def merge_badges(before_text: str, badges: list[str], after_text: str) -> str:
+def merge_badges(before_text: str, badges: List[str], after_text: str) -> str:
     if badges:
         return before_text + "\n" + "\n".join(badges) + "\n\n" + after_text
     return before_text + "\n" + after_text

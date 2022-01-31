@@ -1,6 +1,7 @@
 import logging
 import os.path
 import re
+from typing import List
 
 import instarepo.git
 import instarepo.github
@@ -56,7 +57,7 @@ class RepoDescriptionFix:
             return get_description_from_lines(lines)
 
 
-def get_description_from_lines(lines: list[str]) -> str:
+def get_description_from_lines(lines: List[str]) -> str:
     if not lines:
         return None
     line = lines[0]

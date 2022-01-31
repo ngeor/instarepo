@@ -1,6 +1,6 @@
 import logging
 import tempfile
-from typing import Iterable
+from typing import Iterable, List
 
 import requests.auth
 
@@ -197,11 +197,22 @@ def fixer_class_to_fixer_key(clz):
     The identifier is shorter and can be used to dynamically
     turn fixers on/off via the CLI.
     """
-    my_module: str = clz.__module__.removeprefix("instarepo.fixers.")
+    full_module_name: str = clz.__module__
+    expected_prefix = "instarepo.fixers."
+    if not full_module_name.startswith(expected_prefix):
+        raise ValueError(
+            f"Module {full_module_name} did not start with prefix {expected_prefix}"
+        )
+    expected_suffix = "Fix"
+    if not clz.__name__.endswith(expected_suffix):
+        raise ValueError(
+            f"Module {clz.__name__} did not end with suffix {expected_suffix}"
+        )
+    my_module = full_module_name[len(expected_prefix) :]
     return (
         my_module
         + "."
-        + pascal_case_to_underscore_case(clz.__name__.removesuffix("Fix"))
+        + pascal_case_to_underscore_case(clz.__name__[0 : -len(expected_suffix)])
     )
 
 
@@ -222,7 +233,7 @@ def pascal_case_to_underscore_case(value: str) -> str:
 
 
 def select_fixer_classes(
-    only_fixers: list[str] = None, except_fixers: list[str] = None
+    only_fixers: List[str] = None, except_fixers: List[str] = None
 ):
     if only_fixers:
         if except_fixers:
@@ -240,7 +251,7 @@ def select_fixer_classes(
         return all_fixer_classes()
 
 
-def _prefixes_of_fixer(fixer_class, all_prefixes: list[str]):
+def _prefixes_of_fixer(fixer_class, all_prefixes: List[str]):
     return list(
         filter(
             lambda prefix: fixer_class_to_fixer_key(fixer_class).startswith(prefix),

@@ -19,7 +19,7 @@ A Delphi app to rename files (legacy project)
 ![screenshot](/scrnshot.png?raw=true "Screenshot")
     """
 
-    def replacer(match: re.Match[str]) -> str:
+    def replacer(match: re.Match) -> str:
         """The replacer function for the regex replacement"""
         return (
             match.string[match.start() : match.start("filename")]

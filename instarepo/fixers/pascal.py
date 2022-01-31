@@ -87,7 +87,7 @@ class AutoFormatFix:
             self.git.add(rel_path)
             self.files.append(rel_path)
 
-    def _build_args(self, rel_pas_file: str) -> list[str]:
+    def _build_args(self, rel_pas_file: str):
         args = [
             JCF_EXE,
             "-config=" + find_jedi_cfg(),
