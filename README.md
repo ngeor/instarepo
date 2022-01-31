@@ -1,5 +1,7 @@
 # instarepo
 
+[![Python CI](https://github.com/ngeor/instarepo/actions/workflows/build.yml/badge.svg)](https://github.com/ngeor/instarepo/actions/workflows/build.yml)
+
 CLI automation tool to batch process multiple repositories.
 
 ## Requirements
