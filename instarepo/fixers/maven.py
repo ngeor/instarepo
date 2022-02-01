@@ -314,8 +314,8 @@ class MavenBadgesFix:
 
     def _badges_dict(self):
         badges = {}
-        badges |= self._github_actions_badge()
-        badges |= self._effective_pom_badges()
+        badges.update(self._github_actions_badge())
+        badges.update(self._effective_pom_badges())
         return badges
 
     def _github_actions_badge(self):
@@ -332,11 +332,11 @@ class MavenBadgesFix:
             self.maven.run("-B", "help:effective-pom", f"-Doutput={filename}")
             tree = instarepo.xml_utils.parse(filename)
             root = tree.getroot()
-            badges |= maven_central_badge(root)
+            badges.update(maven_central_badge(root))
             # edge case for checkstyle-rules artifact which has to publish
             # javadoc but doesn't have any source code
             if self.git.isdir("src", "main", "java"):
-                badges |= javadoc_badge(root)
+                badges.update(javadoc_badge(root))
         return badges
 
 
