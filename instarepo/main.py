@@ -3,6 +3,7 @@ import argparse
 import logging
 
 import instarepo.commands.analyze
+import instarepo.commands.clone
 import instarepo.commands.fix
 import instarepo.commands.list
 
@@ -26,6 +27,8 @@ def create_command(args):
         cmd = instarepo.commands.fix.FixCommand(args)
     elif args.subparser_name == "list":
         cmd = instarepo.commands.list.ListCommand(args)
+    elif args.subparser_name == "clone":
+        cmd = instarepo.commands.clone.CloneCommand(args)
     else:
         raise ValueError(f"Sub-parser {args.subparser_name} is not implemented")
     return cmd
@@ -79,6 +82,13 @@ Fixers:
     )
     _configure_analyze_parser(analyze_parser)
 
+    clone_parser = subparsers.add_parser(
+        "clone",
+        help="Clones all the available repositories",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    _configure_clone_parser(clone_parser)
+
     return parser.parse_args(args)
 
 
@@ -130,6 +140,17 @@ def _configure_analyze_parser(parser: argparse.ArgumentParser):
         choices=["commits", "files"],
         default="commits",
         help="The metric to report on",
+    )
+
+
+def _configure_clone_parser(parser: argparse.ArgumentParser):
+    _add_auth_options(parser)
+    _add_archived_option(parser)
+    _add_filter_options(parser)
+    parser.add_argument(
+        "--projects-dir",
+        required=True,
+        help="The directory where projects are going to be cloned into",
     )
 
 

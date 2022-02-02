@@ -19,19 +19,22 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] [--verbose] {list,fix,analyze} ...
+usage: main.py [-h] [--verbose] {list,fix,analyze,clone} ...
 
 Apply changes on multiple repositories
 
 positional arguments:
-  {list,fix,analyze}  Sub-commands help
-    list              Lists the available repositories
-    fix               Runs automatic fixes on the repositories
-    analyze           Analyzes the available repositories, counting historical LOC
+  {list,fix,analyze,clone}
+                        Sub-commands help
+    list                Lists the available repositories
+    fix                 Runs automatic fixes on the repositories
+    analyze             Analyzes the available repositories, counting
+                        historical LOC
+    clone               Clones all the available repositories
 
 optional arguments:
-  -h, --help          show this help message and exit
-  --verbose           Verbose output
+  -h, --help            show this help message and exit
+  --verbose             Verbose output
 ```
 
 ## List
@@ -270,4 +273,54 @@ Filtering:
 
 Example:
     pipenv run python -m instarepo.main analyze -u USER -t TOKEN --since 2021-11-06
+```
+
+## Clone
+
+Clones repositories from GitHub locally. Skips repositories that are already present.
+
+By default, skips forks and archived repositories.
+
+```
+usage: main.py clone [-h] -u USER -t TOKEN [--archived {allow,deny,only}]
+                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                     [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                     [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
+                     [--pushed-before PUSHED_BEFORE] --projects-dir
+                     PROJECTS_DIR
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --archived {allow,deny,only}
+                        Filter archived repositories
+  --only-language ONLY_LANGUAGE
+                        Only process repositories of the given programming
+                        language
+  --except-language EXCEPT_LANGUAGE
+                        Do not process repositories of the given programming
+                        language
+  --only-name-prefix ONLY_NAME_PREFIX
+                        Only process repositories whose name starts with the
+                        given prefix
+  --except-name-prefix EXCEPT_NAME_PREFIX
+                        Do not process repositories whose name starts with the
+                        given prefix
+  --projects-dir PROJECTS_DIR
+                        The directory where projects are going to be cloned
+                        into
+
+Authentication:
+  -u USER, --user USER  The GitHub username
+  -t TOKEN, --token TOKEN
+                        The GitHub token
+
+Filtering:
+  --forks {allow,deny,only}
+                        Filter forks
+  --pushed-after PUSHED_AFTER
+                        Only process repositories that had changes pushed
+                        after the given time interval e.g. 4h
+  --pushed-before PUSHED_BEFORE
+                        Only process repositories that had changes pushed
+                        before the given time interval e.g. 4h
 ```

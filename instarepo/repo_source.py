@@ -182,8 +182,10 @@ class RepoSourceBuilder:
             self.github = instarepo.github.GitHub(
                 auth=requests.auth.HTTPBasicAuth(args.user, args.token),
             )
-        self.sort = args.sort
-        self.direction = args.direction
+        if "sort" in args:
+            self.sort = args.sort
+        if "direction" in args:
+            self.direction = args.direction
         self.forks = FilterMode.parse(args.forks.upper())
         if "archived" in args:
             self.archived = FilterMode.parse(args.archived.upper())
