@@ -1,6 +1,27 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+- Targetting Python 3.10
+- Support Python 3.8
+- Excluding alpha versions in Maven upgrades
+
+### Features
+
+- Adding GitHub actions workflow
+- Sorting by pushed date instead of updated date in list command
+- Adding new clone command that supports cloning GitHub repos
+- Store GitHub credentials for easier use
+- Support login/logout commands for Linux/Mac
+
+### Miscellaneous Tasks
+
+- Adding GitHub action badge
+- Compatibility issue with Python 3.8
+
 ## [0.3.0] - 2022-01-30
 
 ### Features
