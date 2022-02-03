@@ -39,6 +39,7 @@ class FixCommand:
         self.fixer_classes = list(
             select_fixer_classes(args.only_fixers, args.except_fixers)
         )
+        self.fixer_classes.sort(key=try_get_fixer_order)
 
     def run(self):
         if not self.fixer_classes:
@@ -189,6 +190,17 @@ def epilog():
     return result
 
 
+def try_get_fixer_order(fixer_class):
+    try:
+        return fixer_class.order
+    except:
+        return 0
+
+
+FIXER_PREFIX = "instarepo.fixers."
+FIXER_SUFFIX = "Fix"
+
+
 def fixer_class_to_fixer_key(clz):
     """
     Derives the unique fixer identifier out of a fixer class.
@@ -196,12 +208,12 @@ def fixer_class_to_fixer_key(clz):
     turn fixers on/off via the CLI.
     """
     full_module_name: str = clz.__module__
-    expected_prefix = "instarepo.fixers."
+    expected_prefix = FIXER_PREFIX
     if not full_module_name.startswith(expected_prefix):
         raise ValueError(
             f"Module {full_module_name} did not start with prefix {expected_prefix}"
         )
-    expected_suffix = "Fix"
+    expected_suffix = FIXER_SUFFIX
     if not clz.__name__.endswith(expected_suffix):
         raise ValueError(
             f"Module {clz.__name__} did not end with suffix {expected_suffix}"
@@ -237,25 +249,31 @@ def select_fixer_classes(
         if except_fixers:
             raise ValueError("Cannot use only_fixers and except_fixers together")
         return filter(
-            lambda fixer_class: _prefixes_of_fixer(fixer_class, only_fixers),
+            lambda fixer_class: fixer_class_starts_with_prefix(
+                fixer_class, only_fixers
+            ),
             all_fixer_classes(),
         )
     elif except_fixers:
         return filter(
-            lambda fixer_class: not _prefixes_of_fixer(fixer_class, except_fixers),
+            lambda fixer_class: not fixer_class_starts_with_prefix(
+                fixer_class, except_fixers
+            ),
             all_fixer_classes(),
         )
     else:
         return all_fixer_classes()
 
 
-def _prefixes_of_fixer(fixer_class, all_prefixes: List[str]):
-    return list(
-        filter(
-            lambda prefix: fixer_class_to_fixer_key(fixer_class).startswith(prefix),
-            all_prefixes,
-        )
-    )
+def fixer_class_starts_with_prefix(fixer_class, prefixes: List[str]):
+    """
+    Checks if the friendly name of the given fixer class starts with any of the given prefixes.
+    """
+    fixer_key = fixer_class_to_fixer_key(fixer_class)
+    for prefix in prefixes:
+        if fixer_key.startswith(prefix):
+            return True
+    return False
 
 
 def all_fixer_classes():
@@ -275,7 +293,7 @@ def all_fixer_classes():
     for my_module in my_modules:
         my_classes = classes_in_module(my_module)
         for clz in my_classes:
-            if clz.__name__.endswith("Fix"):
+            if clz.__name__.endswith(FIXER_SUFFIX):
                 yield clz
 
 

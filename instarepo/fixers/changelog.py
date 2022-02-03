@@ -7,6 +7,8 @@ from instarepo.fixers.base import MissingFileFix
 class MustHaveCliffTomlFix(MissingFileFix):
     """Ensures the configuration for git-cliff (cliff.toml) exists"""
 
+    order = -100
+
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         super().__init__(git, "cliff.toml")
 
@@ -18,6 +20,8 @@ class MustHaveCliffTomlFix(MissingFileFix):
 
 class GenerateChangelogFix:
     """Generates changelog with git-cliff"""
+
+    order = 100
 
     def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
         self.git = git
