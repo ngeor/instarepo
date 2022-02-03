@@ -43,6 +43,7 @@ optional arguments:
 
 Provide GitHub credentials for subsequent commands. Credentials are stored
 in the Windows registry under `HKEY_CURRENT_USER\SOFTWARE\ngeor\instarepo`.
+On Linux/Mac, the credentials are stored in `~/.instarepo.ini`.
 
 ```
 usage: main.py login [-h] -u USERNAME -t TOKEN
