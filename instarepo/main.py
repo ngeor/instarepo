@@ -6,6 +6,8 @@ import instarepo.commands.analyze
 import instarepo.commands.clone
 import instarepo.commands.fix
 import instarepo.commands.list
+import instarepo.commands.login
+import instarepo.commands.logout
 
 
 def main():
@@ -29,6 +31,10 @@ def create_command(args):
         cmd = instarepo.commands.list.ListCommand(args)
     elif args.subparser_name == "clone":
         cmd = instarepo.commands.clone.CloneCommand(args)
+    elif args.subparser_name == "login":
+        cmd = instarepo.commands.login.LoginCommand(args)
+    elif args.subparser_name == "logout":
+        cmd = instarepo.commands.logout.LogoutCommand(args)
     else:
         raise ValueError(f"Sub-parser {args.subparser_name} is not implemented")
     return cmd
@@ -85,9 +91,19 @@ Fixers:
     clone_parser = subparsers.add_parser(
         "clone",
         help="Clones all the available repositories",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     _configure_clone_parser(clone_parser)
+
+    login_parser = subparsers.add_parser(
+        "login",
+        help="Provide GitHub credentials for subsequent commands",
+    )
+    _configure_login_parser(login_parser)
+
+    subparsers.add_parser(
+        "logout",
+        help="Delete previously stored GitHub credentials",
+    )
 
     return parser.parse_args(args)
 
@@ -154,6 +170,10 @@ def _configure_clone_parser(parser: argparse.ArgumentParser):
     )
 
 
+def _configure_login_parser(parser: argparse.ArgumentParser):
+    _add_auth_options(parser, required=True)
+
+
 def _add_archived_option(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--archived",
@@ -164,14 +184,12 @@ def _add_archived_option(parser: argparse.ArgumentParser):
     )
 
 
-def _add_auth_options(parser: argparse.ArgumentParser):
+def _add_auth_options(parser: argparse.ArgumentParser, required=False):
     auth_group = parser.add_argument_group("Authentication")
     auth_group.add_argument(
-        "-u", "--user", action="store", required=True, help="The GitHub username"
+        "-u", "--username", required=required, help="The GitHub username"
     )
-    auth_group.add_argument(
-        "-t", "--token", action="store", required=True, help="The GitHub token"
-    )
+    auth_group.add_argument("-t", "--token", required=required, help="The GitHub token")
 
 
 def _add_sort_options(parser: argparse.ArgumentParser):

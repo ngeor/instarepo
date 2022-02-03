@@ -2,8 +2,6 @@ import logging
 import tempfile
 from typing import Iterable, List
 
-import requests.auth
-
 import instarepo.git
 import instarepo.github
 import instarepo.repo_source
@@ -19,16 +17,16 @@ import instarepo.fixers.readme
 import instarepo.fixers.repo_description
 import instarepo.fixers.vb6
 
+from ..credentials import build_requests_auth
+
 
 class FixCommand:
     def __init__(self, args):
         if args.dry_run:
-            self.github = instarepo.github.GitHub(
-                auth=requests.auth.HTTPBasicAuth(args.user, args.token),
-            )
+            self.github = instarepo.github.GitHub(auth=build_requests_auth(args))
         else:
             self.github = instarepo.github.ReadWriteGitHub(
-                auth=requests.auth.HTTPBasicAuth(args.user, args.token),
+                auth=build_requests_auth(args)
             )
         self.repo_source = (
             instarepo.repo_source.RepoSourceBuilder()

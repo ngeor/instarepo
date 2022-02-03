@@ -2,9 +2,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 from enum import Enum, auto, unique
 
-import requests
-import requests.auth
 import instarepo.github
+
+from .credentials import build_requests_auth
 
 
 @unique
@@ -179,9 +179,7 @@ class RepoSourceBuilder:
         a read-only GitHub client.
         """
         if self.github is None:
-            self.github = instarepo.github.GitHub(
-                auth=requests.auth.HTTPBasicAuth(args.user, args.token),
-            )
+            self.github = instarepo.github.GitHub(auth=build_requests_auth(args))
         if "sort" in args:
             self.sort = args.sort
         if "direction" in args:

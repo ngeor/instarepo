@@ -19,22 +19,53 @@ Inside a pipenv shell, run: `python -m instarepo.main`
 
 ```
 $ python -m instarepo.main --help
-usage: main.py [-h] [--verbose] {list,fix,analyze,clone} ...
+usage: main.py [-h] [--verbose] {list,fix,analyze,clone,login,logout} ...
 
 Apply changes on multiple repositories
 
 positional arguments:
-  {list,fix,analyze,clone}
+  {list,fix,analyze,clone,login,logout}
                         Sub-commands help
     list                Lists the available repositories
     fix                 Runs automatic fixes on the repositories
     analyze             Analyzes the available repositories, counting
                         historical LOC
     clone               Clones all the available repositories
+    login               Provide GitHub credentials for subsequent commands
+    logout              Delete previously stored GitHub credentials
 
 optional arguments:
   -h, --help            show this help message and exit
   --verbose             Verbose output
+```
+
+## Login
+
+Provide GitHub credentials for subsequent commands. Credentials are stored
+in the Windows registry under `HKEY_CURRENT_USER\SOFTWARE\ngeor\instarepo`.
+
+```
+usage: main.py login [-h] -u USERNAME -t TOKEN
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Authentication:
+  -u USERNAME, --username USERNAME
+                        The GitHub username
+  -t TOKEN, --token TOKEN
+                        The GitHub token
+```
+
+## Logout
+
+Delete previously stored GitHub credentials.
+
+```
+usage: main.py logout [-h]
+
+optional arguments:
+  -h, --help  show this help message and exit
 ```
 
 ## List
@@ -44,7 +75,7 @@ Lists the repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py list [-h] -u USER -t TOKEN
+usage: main.py list [-h] [-u USERNAME] [-t TOKEN]
                     [--sort {full_name,created,updated,pushed}]
                     [--direction {asc,desc}]
                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
@@ -71,7 +102,8 @@ optional arguments:
                         Filter archived repositories
 
 Authentication:
-  -u USER, --user USER  The GitHub username
+  -u USERNAME, --username USERNAME
+                        The GitHub username
   -t TOKEN, --token TOKEN
                         The GitHub token
 
@@ -106,7 +138,7 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: main.py fix [-h] -u USER -t TOKEN
+usage: main.py fix [-h] [-u USERNAME] [-t TOKEN]
                    [--sort {full_name,created,updated,pushed}]
                    [--direction {asc,desc}]
                    [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
@@ -139,7 +171,8 @@ optional arguments:
                         Do not run fixers that have the given prefixes
 
 Authentication:
-  -u USER, --user USER  The GitHub username
+  -u USERNAME, --username USERNAME
+                        The GitHub username
   -t TOKEN, --token TOKEN
                         The GitHub token
 
@@ -221,7 +254,7 @@ Analyzes repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py analyze [-h] -u USER -t TOKEN
+usage: main.py analyze [-h] [-u USERNAME] [-t TOKEN]
                        [--sort {full_name,created,updated,pushed}]
                        [--direction {asc,desc}]
                        [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
@@ -253,7 +286,8 @@ optional arguments:
                         The metric to report on
 
 Authentication:
-  -u USER, --user USER  The GitHub username
+  -u USERNAME, --username USERNAME
+                        The GitHub username
   -t TOKEN, --token TOKEN
                         The GitHub token
 
@@ -282,7 +316,8 @@ Clones repositories from GitHub locally. Skips repositories that are already pre
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py clone [-h] -u USER -t TOKEN [--archived {allow,deny,only}]
+usage: main.py clone [-h] [-u USERNAME] [-t TOKEN]
+                     [--archived {allow,deny,only}]
                      [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                      [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
                      [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
@@ -310,7 +345,8 @@ optional arguments:
                         into
 
 Authentication:
-  -u USER, --user USER  The GitHub username
+  -u USERNAME, --username USERNAME
+                        The GitHub username
   -t TOKEN, --token TOKEN
                         The GitHub token
 

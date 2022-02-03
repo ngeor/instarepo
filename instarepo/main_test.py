@@ -19,7 +19,7 @@ def test_parse_args_empty():
 def test_parse_args_list_minimal():
     """Minimal list command parse"""
     result = parse_args(args=["list", "-u", "jdoe", "-t", "secret"])
-    assert result.user == "jdoe"
+    assert result.username == "jdoe"
     assert result.token == "secret"
     assert result.subparser_name == "list"
 
@@ -40,7 +40,7 @@ def test_parse_args_list_archived():
 def test_parse_args_fix_minimal():
     """Minimal fix command parse"""
     result = parse_args(args=["fix", "-u", "x", "--token", "sesame"])
-    assert result.user == "x"
+    assert result.username == "x"
     assert result.token == "sesame"
     assert result.subparser_name == "fix"
 
