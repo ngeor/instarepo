@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 - Adding new clone command that supports cloning GitHub repos
 - Store GitHub credentials for easier use
 - Support login/logout commands for Linux/Mac
+- Ensure changelog is generated last
+- Applying fixes to local git repositories
 
 ### Miscellaneous Tasks
 
