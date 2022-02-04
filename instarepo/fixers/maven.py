@@ -266,10 +266,17 @@ class MustHaveMavenGitHubWorkflowFix(MissingFileFix):
 
 
 class MavenBadgesFix:
-    """Fixes badges for Maven libraries"""
+    """
+    Fixes badges for Maven libraries.
+
+    Does not work for local git repositories.
+    """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+        self,
+        git: instarepo.git.GitWorkingDir,
+        repo: Optional[instarepo.github.Repo],
+        **kwargs,
     ):
         self.git = git
         self.repo = repo
@@ -280,8 +287,9 @@ class MavenBadgesFix:
             return []
         if not self.git.isfile("pom.xml"):
             return []
-
-        badges = self._badges_dict()
+        if not self.repo:
+            return []
+        badges = self._badges_dict(self.repo)
 
         if not badges:
             return []
@@ -312,16 +320,16 @@ class MavenBadgesFix:
         self.git.commit(msg)
         return [msg]
 
-    def _badges_dict(self):
+    def _badges_dict(self, repo: instarepo.github.Repo):
         badges = {}
-        badges.update(self._github_actions_badge())
+        badges.update(self._github_actions_badge(repo))
         badges.update(self._effective_pom_badges())
         return badges
 
-    def _github_actions_badge(self):
+    def _github_actions_badge(self, repo: instarepo.github.Repo):
         if self.git.isfile(".github", "workflows", "maven.yml"):
             needle = "actions/workflows"
-            markdown = f"[![Java CI with Maven](https://github.com/{self.repo.full_name}/actions/workflows/maven.yml/badge.svg)](https://github.com/{self.repo.full_name}/actions/workflows/maven.yml)"
+            markdown = f"[![Java CI with Maven](https://github.com/{repo.full_name}/actions/workflows/maven.yml/badge.svg)](https://github.com/{repo.full_name}/actions/workflows/maven.yml)"
             return {needle: markdown}
         return {}
 
@@ -447,29 +455,36 @@ class Maven:
 
 
 class UrlFix:
-    """Ensures Maven projects have the correct URL and SCM sections"""
+    """
+    Ensures Maven projects have the correct URL and SCM sections.
+
+    Does not work for local git repositories.
+    """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+        self,
+        git: instarepo.git.GitWorkingDir,
+        repo: Optional[instarepo.github.Repo],
+        **kwargs,
     ):
         self.git = git
         self.repo = repo
 
     def run(self):
-        if not self.git.isfile("pom.xml"):
+        if not self.git.isfile("pom.xml") or not self.repo:
             return []
         try:
             ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
-            return self.do_run()
+            return self.do_run(self.repo)
         finally:
             ET.register_namespace("maven", "http://maven.apache.org/POM/4.0.0")
 
-    def do_run(self):
+    def do_run(self, repo: instarepo.github.Repo):
         has_changes = False
         tree = instarepo.xml_utils.parse(self.git.join("pom.xml"))
         root = tree.getroot()
         has_changes |= ensure_element(
-            root, "{http://maven.apache.org/POM/4.0.0}url", self.repo.html_url
+            root, "{http://maven.apache.org/POM/4.0.0}url", repo.html_url
         )
         scm = root.find("{http://maven.apache.org/POM/4.0.0}scm")
         if scm is None:
@@ -479,18 +494,18 @@ class UrlFix:
         has_changes |= ensure_element(
             scm,
             "{http://maven.apache.org/POM/4.0.0}connection",
-            f"scm:git:{self.repo.clone_url}",
+            f"scm:git:{repo.clone_url}",
         )
         has_changes |= ensure_element(
             scm,
             "{http://maven.apache.org/POM/4.0.0}developerConnection",
-            f"scm:git:{self.repo.ssh_url}",
+            f"scm:git:{repo.ssh_url}",
         )
         has_changes |= ensure_element(
             scm, "{http://maven.apache.org/POM/4.0.0}tag", "HEAD"
         )
         has_changes |= ensure_element(
-            scm, "{http://maven.apache.org/POM/4.0.0}url", self.repo.html_url
+            scm, "{http://maven.apache.org/POM/4.0.0}url", repo.html_url
         )
         if has_changes:
             tree.write(self.git.join("pom.xml"))

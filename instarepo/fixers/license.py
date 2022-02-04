@@ -38,7 +38,10 @@ class CopyrightYearFix:
     """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: Optional[instarepo.github.Repo], **kwargs
+        self,
+        git: instarepo.git.GitWorkingDir,
+        repo: Optional[instarepo.github.Repo],
+        **kwargs
     ):
         self.git = git
         self.repo = repo
@@ -94,7 +97,10 @@ class MustHaveLicenseFix(MissingFileFix):
     """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: Optional[instarepo.github.Repo], **kwargs
+        self,
+        git: instarepo.git.GitWorkingDir,
+        repo: Optional[instarepo.github.Repo],
+        **kwargs
     ):
         super().__init__(git, "LICENSE")
         self.repo = repo
