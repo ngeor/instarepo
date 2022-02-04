@@ -1,15 +1,23 @@
 """Unit tests for fix.py"""
 import os
+
 import pytest
+
+import instarepo.fixers.base
+import instarepo.fixers.changelog
 import instarepo.fixers.dotnet
 import instarepo.fixers.maven
-from .fix import (
-    format_body,
-    all_fixer_classes,
-    fixer_class_to_fixer_key,
-    select_fixer_classes,
-)
 import instarepo.git
+
+from .fix import (
+    all_fixer_classes,
+    classes_in_module,
+    create_composite_fixer,
+    fixer_class_to_fixer_key,
+    format_body,
+    select_fixer_classes,
+    try_get_fixer_order,
+)
 
 
 class TestFormatBody:
@@ -82,28 +90,44 @@ def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     assert instance
 
 
-def test_select_fixer_classes():
-    """Tests the select_fixer_classes function"""
-    assert list(all_fixer_classes()) == list(select_fixer_classes())
-    assert [
-        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
-    ] == list(select_fixer_classes(only_fixers=["dotnet"]))
-    assert [
-        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
-        instarepo.fixers.maven.MavenFix,
-        instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
-        instarepo.fixers.maven.MavenBadgesFix,
-        instarepo.fixers.maven.UrlFix,
-    ] == list(select_fixer_classes(only_fixers=["dotnet", "maven"]))
-    with pytest.raises(ValueError):
-        list(select_fixer_classes(only_fixers=["a"], except_fixers=["b"]))
-    assert [
-        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
-        instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
-    ] == list(
-        select_fixer_classes(
+def test_can_create_fixer_for_local_dir(
+    fixer_class,
+):  # pylint: disable=redefined-outer-name
+    """Tests that it is possible to instantiate all fixers without repo/github instances"""
+    mock_git = instarepo.git.GitWorkingDir("/tmp")
+    instance = fixer_class(git=mock_git, repo=None, github=None, verbose=False)
+    assert instance
+
+
+class TestSelectFixerClasses:
+    def test_returns_all_when_unfiltered(self):
+        assert len(list(all_fixer_classes())) == len(select_fixer_classes())
+
+    def test_filter_by_name(self):
+        assert [
+            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+            instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
+        ] == select_fixer_classes(only_fixers=["dotnet"])
+
+    def test_filter_by_two_names(self):
+        assert [
+            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+            instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
+            instarepo.fixers.maven.MavenFix,
+            instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
+            instarepo.fixers.maven.MavenBadgesFix,
+            instarepo.fixers.maven.UrlFix,
+        ] == select_fixer_classes(only_fixers=["dotnet", "maven"])
+
+    def test_cannot_use_only_and_except_together(self):
+        with pytest.raises(ValueError):
+            select_fixer_classes(only_fixers=["a"], except_fixers=["b"])
+
+    def test_filter_except(self):
+        assert [
+            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+            instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
+        ] == select_fixer_classes(
             except_fixers=[
                 "changelog",
                 "ci",
@@ -115,4 +139,41 @@ def test_select_fixer_classes():
                 "vb",
             ]
         )
+
+    def test_sort(self):
+        assert [
+            instarepo.fixers.changelog.MustHaveCliffTomlFix,
+            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+            instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
+            instarepo.fixers.changelog.GenerateChangelogFix,
+        ] == select_fixer_classes(only_fixers=["dotnet", "changelog"])
+
+
+def test_classes_in_module():
+    assert [instarepo.git.GitWorkingDir] == list(classes_in_module(instarepo.git))
+
+
+def test_try_get_fix_order():
+    assert try_get_fixer_order(instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix) == 0
+    assert try_get_fixer_order(instarepo.fixers.changelog.GenerateChangelogFix) == 100
+
+
+def test_create_composite_fixer():
+    # arrange
+    git = instarepo.git.GitWorkingDir("/tmp")
+    fixer_classes = [
+        instarepo.fixers.changelog.MustHaveCliffTomlFix,
+        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
+    ]
+    # act
+    composite_fixer = create_composite_fixer(fixer_classes, git)
+    # assert
+    assert composite_fixer
+    assert isinstance(composite_fixer, instarepo.fixers.base.CompositeFix)
+    assert composite_fixer.rules
+    assert isinstance(
+        composite_fixer.rules[0], instarepo.fixers.changelog.MustHaveCliffTomlFix
+    )
+    assert isinstance(
+        composite_fixer.rules[1], instarepo.fixers.dotnet.DotNetFrameworkVersionFix
     )

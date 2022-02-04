@@ -1,6 +1,6 @@
 import os
 import os.path
-from typing import Optional
+from typing import List
 import instarepo.git
 
 
@@ -9,7 +9,7 @@ class CompositeFix:
         self.rules = rules
 
     def run(self):
-        result = []
+        result: List[str] = []
         for rule in self.rules:
             result.extend(rule.run())
         return result
@@ -65,7 +65,7 @@ class MissingFileFix:
         if not self.should_process_repo():
             return []
         contents = self.get_contents()
-        if contents is None:
+        if not contents:
             return []
         with open(full_filename, "w", encoding="utf8") as file:
             file.write(contents)
@@ -74,8 +74,8 @@ class MissingFileFix:
         self.git.commit(msg)
         return [msg]
 
-    def get_contents(self) -> Optional[str]:
-        return None
+    def get_contents(self) -> str:
+        return ""
 
     def should_process_repo(self) -> bool:
         return True

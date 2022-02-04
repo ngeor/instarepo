@@ -148,6 +148,7 @@ usage: main.py fix [-h] [-u USERNAME] [-t TOKEN]
                    [--pushed-before PUSHED_BEFORE] [--dry-run]
                    [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
                    --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
+                   [--local-dir LOCAL_DIR]
 
 Runs automatic fixes on the repositories
 
@@ -170,6 +171,10 @@ optional arguments:
                         Only run fixers that have the given prefixes
   --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]
                         Do not run fixers that have the given prefixes
+  --local-dir LOCAL_DIR
+                        Apply fixes for a project at a local working
+                        directory. Skips all GitHub related calls and git
+                        push.
 
 Authentication:
   -u USERNAME, --username USERNAME

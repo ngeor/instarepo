@@ -28,6 +28,10 @@ class Repo:
 
 
 class GitHub:
+    """
+    A read-only GitHub client.
+    """
+
     def __init__(self, auth):
         self.auth = auth
 
@@ -88,6 +92,10 @@ class GitHub:
 
 
 class ReadWriteGitHub(GitHub):
+    """
+    A read-write GitHub client.
+    """
+
     def __init__(self, auth):
         super().__init__(auth)
 

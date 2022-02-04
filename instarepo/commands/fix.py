@@ -1,6 +1,6 @@
 import logging
 import tempfile
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import instarepo.git
 import instarepo.github
@@ -22,24 +22,26 @@ from ..credentials import build_requests_auth
 
 class FixCommand:
     def __init__(self, args):
-        if args.dry_run:
-            self.github = instarepo.github.GitHub(auth=build_requests_auth(args))
+        if args.local_dir:
+            self.local_dir = args.local_dir
+            self.github = None
+            self.repo_source = None
         else:
-            self.github = instarepo.github.ReadWriteGitHub(
-                auth=build_requests_auth(args)
+            if args.dry_run:
+                self.github = instarepo.github.GitHub(auth=build_requests_auth(args))
+            else:
+                self.github = instarepo.github.ReadWriteGitHub(
+                    auth=build_requests_auth(args)
+                )
+            self.repo_source = (
+                instarepo.repo_source.RepoSourceBuilder()
+                .with_github(self.github)
+                .with_args(args)
+                .build()
             )
-        self.repo_source = (
-            instarepo.repo_source.RepoSourceBuilder()
-            .with_github(self.github)
-            .with_args(args)
-            .build()
-        )
         self.dry_run: bool = args.dry_run
         self.verbose: bool = args.verbose
-        self.fixer_classes = list(
-            select_fixer_classes(args.only_fixers, args.except_fixers)
-        )
-        self.fixer_classes.sort(key=try_get_fixer_order)
+        self.fixer_classes = select_fixer_classes(args.only_fixers, args.except_fixers)
 
     def run(self):
         if not self.fixer_classes:
@@ -49,11 +51,18 @@ class FixCommand:
             "Using fixers %s",
             ", ".join(map(fixer_class_to_fixer_key, self.fixer_classes)),
         )
-        repos = self.repo_source.get()
-        for repo in repos:
-            self.process(repo)
+        assert (
+            self.repo_source or self.local_dir
+        ), "Either repo_source or local_dir should be set"
+        if self.repo_source:
+            repos = self.repo_source.get()
+            for repo in repos:
+                self.process(repo)
+        elif self.local_dir:
+            self.process_local()
 
     def process(self, repo: instarepo.github.Repo):
+        assert self.github, "github should be set when processing repos"
         logging.info("Processing repo %s", repo.name)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logging.debug("Cloning repo into temp dir %s", tmpdirname)
@@ -62,6 +71,15 @@ class FixCommand:
                 repo, self.github, git, self.fixer_classes, self.dry_run, self.verbose
             )
             processor.process()
+
+    def process_local(self):
+        assert self.local_dir, "local_dir should be set when processing local directory"
+        logging.info("Processing local repo %s", self.local_dir)
+        git = instarepo.git.GitWorkingDir(self.local_dir, quiet=not self.verbose)
+        composite_fixer = create_composite_fixer(
+            self.fixer_classes, git, verbose=self.verbose
+        )
+        composite_fixer.run()
 
 
 class RepoProcessor:
@@ -113,23 +131,10 @@ class RepoProcessor:
             self.git.create_branch(self.branch_name)
 
     def run_fixes(self):
-        composite_fixer = self._create_composite_fixer()
+        composite_fixer = create_composite_fixer(
+            self.fixer_classes, self.git, self.repo, self.github, self.verbose
+        )
         return composite_fixer.run()
-
-    def _create_composite_fixer(self):
-        return instarepo.fixers.base.CompositeFix(
-            list(
-                map(
-                    self._create_fixer,
-                    self.fixer_classes,
-                )
-            )
-        )
-
-    def _create_fixer(self, fixer_class):
-        return fixer_class(
-            git=self.git, repo=self.repo, github=self.github, verbose=self.verbose
-        )
 
     def has_changes(self):
         current_sha = self.git.rev_parse(self.branch_name)
@@ -156,10 +161,29 @@ class RepoProcessor:
             logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
 
 
+def create_composite_fixer(
+    fixer_classes,
+    git: instarepo.git.GitWorkingDir,
+    repo: Optional[instarepo.github.Repo] = None,
+    github: Optional[instarepo.github.GitHub] = None,
+    verbose: bool = False,
+):
+    return instarepo.fixers.base.CompositeFix(
+        list(
+            map(
+                lambda fixer_class: fixer_class(
+                    git=git, repo=repo, github=github, verbose=verbose
+                ),
+                fixer_classes,
+            )
+        )
+    )
+
+
 def format_body(changes: Iterable[str]) -> str:
     body = "The following fixes have been applied:\n"
     for change in changes:
-        lines = non_empty_lines(change)
+        lines = _non_empty_lines(change)
         first = True
         for line in lines:
             if first:
@@ -171,7 +195,7 @@ def format_body(changes: Iterable[str]) -> str:
     return body
 
 
-def non_empty_lines(value: str) -> Iterable[str]:
+def _non_empty_lines(value: str) -> Iterable[str]:
     lines = value.split("\n")
     stripped_lines = (line.strip() for line in lines)
     return (line for line in stripped_lines if line)
@@ -191,10 +215,7 @@ def epilog():
 
 
 def try_get_fixer_order(fixer_class):
-    try:
-        return fixer_class.order
-    except:
-        return 0
+    return fixer_class.order if hasattr(fixer_class, "order") else 0
 
 
 FIXER_PREFIX = "instarepo.fixers."
@@ -222,11 +243,11 @@ def fixer_class_to_fixer_key(clz):
     return (
         my_module
         + "."
-        + pascal_case_to_underscore_case(clz.__name__[0 : -len(expected_suffix)])
+        + _pascal_case_to_underscore_case(clz.__name__[0 : -len(expected_suffix)])
     )
 
 
-def pascal_case_to_underscore_case(value: str) -> str:
+def _pascal_case_to_underscore_case(value: str) -> str:
     """
     Converts a pascal case string (e.g. MyClass)
     into a lower case underscore separated string (e.g. my_class).
@@ -248,24 +269,27 @@ def select_fixer_classes(
     if only_fixers:
         if except_fixers:
             raise ValueError("Cannot use only_fixers and except_fixers together")
-        return filter(
-            lambda fixer_class: fixer_class_starts_with_prefix(
+        unsorted_iterable = filter(
+            lambda fixer_class: _fixer_class_starts_with_prefix(
                 fixer_class, only_fixers
             ),
             all_fixer_classes(),
         )
     elif except_fixers:
-        return filter(
-            lambda fixer_class: not fixer_class_starts_with_prefix(
+        unsorted_iterable = filter(
+            lambda fixer_class: not _fixer_class_starts_with_prefix(
                 fixer_class, except_fixers
             ),
             all_fixer_classes(),
         )
     else:
-        return all_fixer_classes()
+        unsorted_iterable = all_fixer_classes()
+    result = list(unsorted_iterable)
+    result.sort(key=try_get_fixer_order)
+    return result
 
 
-def fixer_class_starts_with_prefix(fixer_class, prefixes: List[str]):
+def _fixer_class_starts_with_prefix(fixer_class, prefixes: List[str]):
     """
     Checks if the friendly name of the given fixer class starts with any of the given prefixes.
     """

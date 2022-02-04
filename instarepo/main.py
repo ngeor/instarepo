@@ -138,6 +138,10 @@ def _configure_fix_parser(parser: argparse.ArgumentParser):
         nargs="+",
         help="Do not run fixers that have the given prefixes",
     )
+    parser.add_argument(
+        "--local-dir",
+        help="Apply fixes for a project at a local working directory. Skips all GitHub related calls and git push.",
+    )
 
 
 def _configure_analyze_parser(parser: argparse.ArgumentParser):

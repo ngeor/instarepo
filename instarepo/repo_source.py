@@ -1,3 +1,8 @@
+"""
+Fetches repository info from GitHub.
+"""
+
+from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 from enum import Enum, auto, unique
@@ -23,6 +28,10 @@ class FilterMode(Enum):
 
     @staticmethod
     def parse(value: str):
+        """
+        Parses the given string value and returns the FilterMode.
+        Matching is case sensitive. If not found, an error will be thrown.
+        """
         return [member for member in FilterMode if member.name == value][0]
 
 
@@ -170,7 +179,7 @@ class RepoSourceBuilder:
         self.github = github
         return self
 
-    def with_args(self, args):
+    def with_args(self, args) -> RepoSourceBuilder:
         """
         Uses the properties defined in the given CLI arguments.
 
@@ -225,6 +234,9 @@ class RepoSourceBuilder:
 def filter_by_name_prefix(
     repos: Iterable[instarepo.github.Repo], string_filter: Optional[StringFilter]
 ) -> Iterable[instarepo.github.Repo]:
+    """
+    Filters the given repos on their name using the given filter.
+    """
     if (
         not string_filter
         or not string_filter.value
@@ -242,6 +254,9 @@ def filter_by_name_prefix(
 def filter_by_language(
     repos: Iterable[instarepo.github.Repo], string_filter: StringFilter
 ) -> Iterable[instarepo.github.Repo]:
+    """
+    Filters the given repos on their language using the given filter.
+    """
     if not string_filter or string_filter.mode == FilterMode.ALLOW:
         return repos
     if string_filter.mode == FilterMode.ONLY:
@@ -259,6 +274,10 @@ def filter_by_language(
 
 
 def parse_timedelta(value: Optional[str]):
+    """
+    Parses a time delta string value. For example "15m" is parsed as a
+    timedelta of 15 minutes.
+    """
     if not value:
         return None
     unit = value[-1]
