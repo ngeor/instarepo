@@ -2,6 +2,8 @@ import datetime
 import os.path
 import re
 
+from typing import Optional
+
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
@@ -29,16 +31,20 @@ def update_copyright_year(contents: str, year: int) -> str:
 
 
 class CopyrightYearFix:
-    """Ensures the year in the license file copyright is up to date"""
+    """
+    Ensures the year in the license file copyright is up to date.
+
+    Does not run for forks, private repos, and local git repos.
+    """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+        self, git: instarepo.git.GitWorkingDir, repo: Optional[instarepo.github.Repo], **kwargs
     ):
         self.git = git
         self.repo = repo
 
     def run(self):
-        if self.repo.private or self.repo.fork:
+        if not self.repo or self.repo.private or self.repo.fork:
             return []
         filename = os.path.join(self.git.dir, "LICENSE")
         if not os.path.isfile(filename):
@@ -81,16 +87,20 @@ SOFTWARE.
 
 
 class MustHaveLicenseFix(MissingFileFix):
-    """Ensures that a license file exists"""
+    """
+    Ensures that a license file exists.
+
+    Does not run for forks, private repos, and local git repos.
+    """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
+        self, git: instarepo.git.GitWorkingDir, repo: Optional[instarepo.github.Repo], **kwargs
     ):
         super().__init__(git, "LICENSE")
         self.repo = repo
 
     def should_process_repo(self):
-        return not self.repo.private and not self.repo.fork
+        return self.repo and not self.repo.private and not self.repo.fork
 
     def get_contents(self):
         contents = MIT_LICENSE.replace(

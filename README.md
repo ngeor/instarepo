@@ -214,9 +214,17 @@ dotnet.dot_net_framework_version
 dotnet.must_have_c_sharp_app_veyor
     If missing, creates an appveyor.yml file for CSharp projects
 license.copyright_year
-    Ensures the year in the license file copyright is up to date
+
+    Ensures the year in the license file copyright is up to date.
+
+    Does not run for forks, private repos, and local git repos.
+
 license.must_have_license
-    Ensures that a license file exists
+
+    Ensures that a license file exists.
+
+    Does not run for forks, private repos, and local git repos.
+
 maven.maven
     Updates the dependencies of a Maven project
 maven.must_have_maven_git_hub_workflow
@@ -251,6 +259,8 @@ repo_description.repo_description
 
     Note: this fixer does not create an MR, it calls the
     GitHub REST API directly (https://docs.github.com/en/rest/reference/repos#update-a-repository).
+
+    Does not run for local git repositories.
 ```
 
 ## Analyze

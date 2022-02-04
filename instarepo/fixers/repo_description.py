@@ -1,7 +1,7 @@
 import logging
 import os.path
 import re
-from typing import List
+from typing import List, Optional
 
 import instarepo.git
 import instarepo.github
@@ -16,13 +16,15 @@ class RepoDescriptionFix:
 
     Note: this fixer does not create an MR, it calls the
     GitHub REST API directly (https://docs.github.com/en/rest/reference/repos#update-a-repository).
+
+    Does not run for local git repositories.
     """
 
     def __init__(
         self,
-        github: instarepo.github.GitHub,
         git: instarepo.git.GitWorkingDir,
-        repo: instarepo.github.Repo,
+        github: Optional[instarepo.github.GitHub],
+        repo: Optional[instarepo.github.Repo],
         **kwargs
     ):
         self.github = github
@@ -31,7 +33,7 @@ class RepoDescriptionFix:
 
     def run(self):
         readme_description = self.get_readme_description()
-        if not readme_description:
+        if not readme_description or not self.repo or not self.github:
             return []
         if readme_description != self.repo.description:
             logging.info(
@@ -59,7 +61,7 @@ class RepoDescriptionFix:
 
 def get_description_from_lines(lines: List[str]) -> str:
     if not lines:
-        return None
+        return ""
     line = lines[0]
     if line.startswith(">"):
         line = line[1:].strip()
