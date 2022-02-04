@@ -3,9 +3,19 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Bug Fixes
+
+- Wheel was lacking xml data files
+- Badges Maven fixer should not run for local repos
+
+### Features
+
+- Building wheel in GitHub Actions
+
 ### Miscellaneous Tasks
 
 - Implement setuptools packaging
+- Setting 2 space indentation for yaml files
 
 ## [0.4.0] - 2022-02-04
 
