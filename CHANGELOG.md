@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.4.0] - 2022-02-04
 
 ### Bug Fixes
 
