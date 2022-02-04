@@ -58,7 +58,7 @@ def parse_args(args=None):
         help="Lists the available repositories",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Example:
-    pipenv run python -m instarepo.main list -u USER -t TOKEN
+    instarepo list -u USER -t TOKEN
     """,
     )
     _configure_list_parser(list_parser)
@@ -69,7 +69,7 @@ def parse_args(args=None):
         help="Runs automatic fixes on the repositories",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Example:
-    pipenv run python -m instarepo.main fix -u USER -t TOKEN
+    instarepo fix -u USER -t TOKEN
 
 Fixers:
 
@@ -83,7 +83,7 @@ Fixers:
         help="Analyzes the available repositories, counting historical LOC",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Example:
-    pipenv run python -m instarepo.main analyze -u USER -t TOKEN --since 2021-11-06
+    instarepo analyze -u USER -t TOKEN --since 2021-11-06
     """,
     )
     _configure_analyze_parser(analyze_parser)

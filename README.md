@@ -8,18 +8,31 @@ CLI automation tool to batch process multiple repositories.
 
 Requirements:
 
-- python 3.8+
+- Python 3.8+
+- pip
 - pipenv
 
-Install dependencies with `pipenv install --dev`
+## Installation
+
+### Development mode
+
+- Install dependencies with `pipenv install --dev`
+- Inside a pipenv shell, run: `python -m instarepo.main`.
+
+### Manual installation
+
+- Install dependencies with `pipenv install --dev`
+- Build the wheel with `pipenv run python -m build`
+- Install the wheel with `pip install [--force-reinstall] --user dist/path-to-wheel.whl`
+
+You'll be able to invoke `instarepo` by just `instarepo`.
+
+Uninstall with `pip uninstall instarepo-ngeor`.
 
 ## Usage
 
-Inside a pipenv shell, run: `python -m instarepo.main`
-
 ```
-$ python -m instarepo.main --help
-usage: main.py [-h] [--verbose] {list,fix,analyze,clone,login,logout} ...
+usage: instarepo [-h] [--verbose] {list,fix,analyze,clone,login,logout} ...
 
 Apply changes on multiple repositories
 
@@ -46,7 +59,7 @@ in the Windows registry under `HKEY_CURRENT_USER\SOFTWARE\ngeor\instarepo`.
 On Linux/Mac, the credentials are stored in `~/.instarepo.ini`.
 
 ```
-usage: main.py login [-h] -u USERNAME -t TOKEN
+usage: instarepo login [-h] -u USERNAME -t TOKEN
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -63,7 +76,7 @@ Authentication:
 Delete previously stored GitHub credentials.
 
 ```
-usage: main.py logout [-h]
+usage: instarepo logout [-h]
 
 optional arguments:
   -h, --help  show this help message and exit
@@ -76,14 +89,15 @@ Lists the repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py list [-h] [-u USERNAME] [-t TOKEN]
-                    [--sort {full_name,created,updated,pushed}]
-                    [--direction {asc,desc}]
-                    [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-                    [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                    [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
-                    [--pushed-before PUSHED_BEFORE]
-                    [--archived {allow,deny,only}]
+usage: instarepo list [-h] [-u USERNAME] [-t TOKEN]
+                      [--sort {full_name,created,updated,pushed}]
+                      [--direction {asc,desc}]
+                      [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                      [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                      [--forks {allow,deny,only}]
+                      [--pushed-after PUSHED_AFTER]
+                      [--pushed-before PUSHED_BEFORE]
+                      [--archived {allow,deny,only}]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -123,7 +137,7 @@ Filtering:
                         before the given time interval e.g. 4h
 
 Example:
-    pipenv run python -m instarepo.main list -u USER -t TOKEN
+    instarepo list -u USER -t TOKEN
 ```
 
 ## Fix
@@ -139,16 +153,16 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: main.py fix [-h] [-u USERNAME] [-t TOKEN]
-                   [--sort {full_name,created,updated,pushed}]
-                   [--direction {asc,desc}]
-                   [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-                   [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                   [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
-                   [--pushed-before PUSHED_BEFORE] [--dry-run]
-                   [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
-                   --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
-                   [--local-dir LOCAL_DIR]
+usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN]
+                     [--sort {full_name,created,updated,pushed}]
+                     [--direction {asc,desc}]
+                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                     [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                     [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
+                     [--pushed-before PUSHED_BEFORE] [--dry-run]
+                     [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
+                     --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
+                     [--local-dir LOCAL_DIR]
 
 Runs automatic fixes on the repositories
 
@@ -197,7 +211,7 @@ Filtering:
                         before the given time interval e.g. 4h
 
 Example:
-    pipenv run python -m instarepo.main fix -u USER -t TOKEN
+    instarepo fix -u USER -t TOKEN
 
 Fixers:
 
@@ -270,16 +284,16 @@ Analyzes repositories.
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py analyze [-h] [-u USERNAME] [-t TOKEN]
-                       [--sort {full_name,created,updated,pushed}]
-                       [--direction {asc,desc}]
-                       [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-                       [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                       [--forks {allow,deny,only}]
-                       [--pushed-after PUSHED_AFTER]
-                       [--pushed-before PUSHED_BEFORE]
-                       [--archived {allow,deny,only}] --since SINCE
-                       [--metric {commits,files}]
+usage: instarepo analyze [-h] [-u USERNAME] [-t TOKEN]
+                         [--sort {full_name,created,updated,pushed}]
+                         [--direction {asc,desc}]
+                         [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                         [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                         [--forks {allow,deny,only}]
+                         [--pushed-after PUSHED_AFTER]
+                         [--pushed-before PUSHED_BEFORE]
+                         [--archived {allow,deny,only}] --since SINCE
+                         [--metric {commits,files}]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -322,7 +336,7 @@ Filtering:
                         before the given time interval e.g. 4h
 
 Example:
-    pipenv run python -m instarepo.main analyze -u USER -t TOKEN --since 2021-11-06
+    instarepo analyze -u USER -t TOKEN --since 2021-11-06
 ```
 
 ## Clone
@@ -332,13 +346,14 @@ Clones repositories from GitHub locally. Skips repositories that are already pre
 By default, skips forks and archived repositories.
 
 ```
-usage: main.py clone [-h] [-u USERNAME] [-t TOKEN]
-                     [--archived {allow,deny,only}]
-                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-                     [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                     [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
-                     [--pushed-before PUSHED_BEFORE] --projects-dir
-                     PROJECTS_DIR
+usage: instarepo clone [-h] [-u USERNAME] [-t TOKEN]
+                       [--archived {allow,deny,only}]
+                       [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
+                       [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                       [--forks {allow,deny,only}]
+                       [--pushed-after PUSHED_AFTER]
+                       [--pushed-before PUSHED_BEFORE] --projects-dir
+                       PROJECTS_DIR
 
 optional arguments:
   -h, --help            show this help message and exit
