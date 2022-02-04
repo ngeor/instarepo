@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Targetting Python 3.10
 - Support Python 3.8
 - Excluding alpha versions in Maven upgrades
+- Excluding license and repo_description rules from local git repo execution
 
 ### Features
 
