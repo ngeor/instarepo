@@ -1,6 +1,7 @@
 # instarepo
 
 [![Python CI](https://github.com/ngeor/instarepo/actions/workflows/build.yml/badge.svg)](https://github.com/ngeor/instarepo/actions/workflows/build.yml)
+![PyPI](https://img.shields.io/pypi/v/instarepo)
 
 CLI automation tool to batch process multiple repositories.
 
@@ -10,9 +11,13 @@ Requirements:
 
 - Python 3.8+
 - pip
-- pipenv
+- pipenv (for development)
 
 ## Installation
+
+### Simple
+
+Install from PyPI with `pip3 install --user instarepo`.
 
 ### Development mode
 
