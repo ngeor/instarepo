@@ -27,7 +27,7 @@ Requirements:
 
 You'll be able to invoke `instarepo` by just `instarepo`.
 
-Uninstall with `pip uninstall instarepo-ngeor`.
+Uninstall with `pip uninstall instarepo`.
 
 ## Usage
 
