@@ -59,7 +59,7 @@ optional arguments:
   --version             show program's version number and exit
 ```
 
-## Login
+### Login
 
 Provide GitHub credentials for subsequent commands. Credentials are stored
 in the Windows registry under `HKEY_CURRENT_USER\SOFTWARE\ngeor\instarepo`.
@@ -78,7 +78,7 @@ Authentication:
                         The GitHub token
 ```
 
-## Logout
+### Logout
 
 Delete previously stored GitHub credentials.
 
@@ -89,7 +89,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## List
+### List
 
 Lists the repositories.
 
@@ -147,7 +147,7 @@ Example:
     instarepo list -u USER -t TOKEN
 ```
 
-## Fix
+### Fix
 
 Applies automatic fixes on repositories.
 
@@ -292,7 +292,7 @@ repo_description.repo_description
     Does not run for local git repositories.
 ```
 
-## Analyze
+### Analyze
 
 Analyzes repositories.
 
@@ -354,7 +354,7 @@ Example:
     instarepo analyze -u USER -t TOKEN --since 2021-11-06
 ```
 
-## Clone
+### Clone
 
 Clones repositories from GitHub locally. Skips repositories that are already present.
 
@@ -406,3 +406,23 @@ Filtering:
                         Only process repositories that had changes pushed
                         before the given time interval e.g. 4h
 ```
+
+## Development
+
+- Files are formatted with `black`
+- Unit tests with `pytest`
+
+### Creating a new release
+
+- Make sure you're on the latest of the default branch and there are no pending changes
+- Update the versions in `setup.cfg` and `instarepo/main.py`
+- Update the changelog with `git-cliff -t x.y.z -o CHANGELOG.md`
+- Commit with a message like "chore(release): prepare for version x.y.z"
+- Create a tag `vx.y.z`
+- Push with `git push --follow-tags`
+- Clean to make sure there are no build files with `git clean -fdx`
+- Build the wheel `python3 -m build` (inside pipenv)
+- Upload the wheel with `twine upload dist/*`
+- Update again the versions in `setup.cfg` and `instarepo/main.py` to set the
+  next development versions.
+- Commit with a message like "chore(release): prepare for next development iteration"
