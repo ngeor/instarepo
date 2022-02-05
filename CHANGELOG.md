@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.5.0] - 2022-02-05
 
 ### Bug Fixes
 
@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Building wheel in GitHub Actions
+- Publish wheel as artifact in GitHub Actions
+- Add  option
 
 ### Miscellaneous Tasks
 
