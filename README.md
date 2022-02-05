@@ -32,7 +32,8 @@ Uninstall with `pip uninstall instarepo-ngeor`.
 ## Usage
 
 ```
-usage: instarepo [-h] [--verbose] {list,fix,analyze,clone,login,logout} ...
+usage: instarepo [-h] [--verbose] [--version]
+                 {list,fix,analyze,clone,login,logout} ...
 
 Apply changes on multiple repositories
 
@@ -50,6 +51,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --verbose             Verbose output
+  --version             show program's version number and exit
 ```
 
 ## Login

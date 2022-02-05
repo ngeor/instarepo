@@ -9,6 +9,7 @@ import instarepo.commands.list
 import instarepo.commands.login
 import instarepo.commands.logout
 
+VERSION = "0.5.0-alpha"
 
 def main():
     """Main entrypoint of the program"""
@@ -43,11 +44,12 @@ def create_command(args):
 def parse_args(args=None):
     """Parses the CLI arguments"""
     parser = argparse.ArgumentParser(
-        description="Apply changes on multiple repositories"
+        description="Apply changes on multiple repositories", prog="instarepo"
     )
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Verbose output"
     )
+    parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
 
     subparsers = parser.add_subparsers(
         dest="subparser_name", help="Sub-commands help", required=True
