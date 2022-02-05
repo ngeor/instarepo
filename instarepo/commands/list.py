@@ -7,6 +7,9 @@ class ListCommand:
         self.repo_source = (
             instarepo.repo_source.RepoSourceBuilder().with_args(args).build()
         )
+        # remember sort order so that if we're sorting by a date field,
+        # we'll be able to show that field on the last column
+        self.sort = args.sort
 
     def run(self):
         repos = list(self.repo_source.get())
@@ -24,7 +27,7 @@ class ListCommand:
                 max_repo_name_length,
                 "language",
                 max_language_length,
-                "pushed at",
+                date_column_title(self.sort),
             )
         )
         for repo in repos:
@@ -34,6 +37,24 @@ class ListCommand:
                     max_repo_name_length,
                     repo.language or default_language,
                     max_language_length,
-                    repo.pushed_at,
+                    date_column_value(self.sort, repo),
                 )
             )
+
+
+def date_column_title(sort):
+    if sort == "created":
+        return "created at"
+    elif sort == "updated":
+        return "updated at"
+    else:
+        return "pushed at"
+
+
+def date_column_value(sort, repo):
+    if sort == "created":
+        return repo.created_at
+    elif sort == "updated":
+        return repo.updated_at
+    else:
+        return repo.pushed_at

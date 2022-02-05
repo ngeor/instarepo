@@ -11,6 +11,7 @@ import instarepo.commands.logout
 
 VERSION = "0.6.0-alpha"
 
+
 def main():
     """Main entrypoint of the program"""
     args = parse_args()
