@@ -9,7 +9,7 @@ import instarepo.commands.list
 import instarepo.commands.login
 import instarepo.commands.logout
 
-VERSION = "0.5.0"
+VERSION = "0.6.0-alpha"
 
 def main():
     """Main entrypoint of the program"""
