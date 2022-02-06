@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Features
+
+- When sorting by a date field, show that date in the last column of the List command
+
+### Miscellaneous Tasks
+
+- Added PyPI badge in README
+- Added release procedure in README
+
 ## [0.5.0] - 2022-02-05
 
 ### Bug Fixes
