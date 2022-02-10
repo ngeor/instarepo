@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 
 - Added PyPI badge in README
 - Added release procedure in README
+- Update dependency pytest to v7
+- Update dependency pylint to v2.12.2
 
 ## [0.5.0] - 2022-02-05
 
