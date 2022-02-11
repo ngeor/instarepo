@@ -3,33 +3,36 @@ All notable changes to this project will be documented in this file.
 
 ## [0.6.0] - 2022-02-11
 
+### Dependencies
+
+- Update dependency black to v22
+- Update dependency pylint to v2.12.2
+- Update dependency pytest to v7
+- Update dependency pytest-mock to v3.7.0
+- Update dependency requests to v2.27.1
+
 ### Features
 
-- When sorting by a date field, show that date in the last column of the List command
 - [**breaking**] Retire maven fixer
+- When sorting by a date field, show that date in the last column of the List command
 
 ### Miscellaneous Tasks
 
 - Added PyPI badge in README
 - Added release procedure in README
-- Update dependency pytest to v7
-- Update dependency pylint to v2.12.2
-- Update dependency requests to v2.27.1
-- Update dependency pytest-mock to v3.7.0
-- Update dependency black to v22
 
 ## [0.5.0] - 2022-02-05
 
 ### Bug Fixes
 
-- Wheel was lacking xml data files
 - Badges Maven fixer should not run for local repos
+- Wheel was lacking xml data files
 
 ### Features
 
+- Add  option
 - Building wheel in GitHub Actions
 - Publish wheel as artifact in GitHub Actions
-- Add  option
 
 ### Miscellaneous Tasks
 
@@ -40,20 +43,20 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- Targetting Python 3.10
-- Support Python 3.8
 - Excluding alpha versions in Maven upgrades
 - Excluding license and repo_description rules from local git repo execution
+- Support Python 3.8
+- Targetting Python 3.10
 
 ### Features
 
 - Adding GitHub actions workflow
-- Sorting by pushed date instead of updated date in list command
 - Adding new clone command that supports cloning GitHub repos
+- Applying fixes to local git repositories
+- Ensure changelog is generated last
+- Sorting by pushed date instead of updated date in list command
 - Store GitHub credentials for easier use
 - Support login/logout commands for Linux/Mac
-- Ensure changelog is generated last
-- Applying fixes to local git repositories
 
 ### Miscellaneous Tasks
 
@@ -71,11 +74,11 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Pretty print list output
+- Allow filtering repos based on when they had changes pushed to them
+- If Maven output consists of a single version update, add a single line commit
 - Use conventional commit messages
 - Using git-cliff to generate changelog
-- If Maven output consists of a single version update, add a single line commit
-- Allow filtering repos based on when they had changes pushed to them
+- Pretty print list output
 
 ### Miscellaneous Tasks
 
