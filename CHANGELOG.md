@@ -1,16 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.6.0] - 2022-02-11
 
 ### Features
 
 - When sorting by a date field, show that date in the last column of the List command
+- [**breaking**] Retire maven fixer
 
 ### Miscellaneous Tasks
 
 - Added PyPI badge in README
 - Added release procedure in README
+- Update dependency pytest to v7
+- Update dependency pylint to v2.12.2
+- Update dependency requests to v2.27.1
+- Update dependency pytest-mock to v3.7.0
+- Update dependency black to v22
 
 ## [0.5.0] - 2022-02-05
 
