@@ -246,8 +246,6 @@ license.must_have_license
 
     Does not run for forks, private repos, and local git repos.
 
-maven.maven
-    Updates the dependencies of a Maven project
 maven.must_have_maven_git_hub_workflow
     If missing, adds a GitHub action Maven build workflow
 maven.maven_badges

@@ -113,7 +113,6 @@ class TestSelectFixerClasses:
         assert [
             instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveCSharpAppVeyorFix,
-            instarepo.fixers.maven.MavenFix,
             instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
             instarepo.fixers.maven.MavenBadgesFix,
             instarepo.fixers.maven.UrlFix,
