@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Features
+
+- Auto-closing MRs that no longer have changes
+
+### Miscellaneous Tasks
+
+- Use a dedicated dependencies group in changelog, sort commits alphabetically
+
 ## [0.6.0] - 2022-02-11
 
 ### Dependencies
