@@ -27,12 +27,11 @@ class FixCommand:
             self.github = None
             self.repo_source = None
         else:
+            auth = build_requests_auth(args)
             if args.dry_run:
-                self.github = instarepo.github.GitHub(auth=build_requests_auth(args))
+                self.github = instarepo.github.GitHub(auth=auth)
             else:
-                self.github = instarepo.github.ReadWriteGitHub(
-                    auth=build_requests_auth(args)
-                )
+                self.github = instarepo.github.ReadWriteGitHub(auth=auth)
             self.repo_source = (
                 instarepo.repo_source.RepoSourceBuilder()
                 .with_github(self.github)
@@ -101,9 +100,9 @@ class RepoProcessor:
         self.verbose = verbose
 
     def process(self):
-        self.prepare()
+        self.git.create_branch(self.branch_name)
         changes = self.run_fixes()
-        if self.has_changes():
+        if self.is_branch_not_at_default():
             if not changes:
                 logging.warning("Git reports changes but the internal changes do not.")
                 logging.warning("This is likely a bug in the internal checker code.")
@@ -118,17 +117,7 @@ class RepoProcessor:
                 logging.warning("This is likely a bug in the internal checker code.")
             else:
                 logging.debug("No changes found for repo %s", self.repo.name)
-
-    def prepare(self):
-        remote_branch_sha = ""
-        try:
-            remote_branch_sha = self.git.rev_parse(f"remotes/origin/{self.branch_name}")
-        except:  # pylint: disable=bare-except
-            pass
-        if remote_branch_sha:
-            self.git.checkout(self.branch_name)
-        else:
-            self.git.create_branch(self.branch_name)
+            self.auto_close_mr()
 
     def run_fixes(self):
         composite_fixer = create_composite_fixer(
@@ -136,19 +125,27 @@ class RepoProcessor:
         )
         return composite_fixer.run()
 
-    def has_changes(self):
+    def is_branch_not_at_default(self):
+        """
+        Checks if the instarepo branch is pointing to a different SHA
+        than the default branch (which would imply we have extra commits).
+        """
         current_sha = self.git.rev_parse(self.branch_name)
         main_sha = self.git.rev_parse(self.repo.default_branch)
         return current_sha != main_sha
+
+    def list_merge_requests(self):
+        head = self.github.auth.username + ":" + self.branch_name
+        return self.github.list_merge_requests(
+            self.repo.full_name, head, self.repo.default_branch
+        )
 
     def create_merge_request(self, changes: Iterable[str]):
         if self.dry_run:
             logging.info("Would have created PR for repo %s", self.repo.name)
             return
         self.git.push()
-        if self.github.has_merge_request(
-            self.repo.full_name, self.branch_name, self.repo.default_branch
-        ):
+        if len(self.list_merge_requests()) > 0:
             logging.info("PR already exists for repo %s", self.repo.name)
         else:
             html_url = self.github.create_merge_request(
@@ -159,6 +156,34 @@ class RepoProcessor:
                 format_body(changes),
             )
             logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
+
+    def auto_close_mr(self):
+        self.delete_remote_branch_if_exists()
+        self.close_mr_if_exists()
+
+    def delete_remote_branch_if_exists(self):
+        remote_branch_sha = ""
+        try:
+            remote_branch_sha = self.git.rev_parse(f"remotes/origin/{self.branch_name}")
+        except:  # pylint: disable=bare-except
+            pass
+        if not remote_branch_sha:
+            return
+        if self.dry_run:
+            logging.info("Would have deleted remote branch")
+            return
+        self.git.delete_remote_branch(self.branch_name)
+
+    def close_mr_if_exists(self):
+        merge_requests = self.list_merge_requests()
+        if not merge_requests:
+            return
+        merge_request = merge_requests[0]
+        if not merge_request:
+            logging.warning("Null item in MR result")
+            return
+        number = merge_request["number"]
+        self.github.close_merge_request(self.repo.full_name, number)
 
 
 def create_composite_fixer(

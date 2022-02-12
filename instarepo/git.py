@@ -52,9 +52,20 @@ class GitWorkingDir:
         args.extend(["-m", message])
         subprocess.run(args, check=True, cwd=self.dir)
 
-    def push(self) -> None:
+    def push(self, remote_name: str = "origin") -> None:
         subprocess.run(
-            ["git", "push", "-u", "origin", "HEAD"], check=True, cwd=self.dir
+            ["git", "push", "--force-with-lease", "-u", remote_name, "HEAD"],
+            check=True,
+            cwd=self.dir,
+        )
+
+    def delete_remote_branch(
+        self, branch_name: str, remote_name: str = "origin"
+    ) -> None:
+        subprocess.run(
+            ["git", "push", "--delete", remote_name, branch_name],
+            check=True,
+            cwd=self.dir,
         )
 
     def rev_parse(self, branch_name: str) -> str:

@@ -78,7 +78,7 @@ class GitHub:
     def update_description(self, full_name: str, description: str):
         logging.debug("Would have set description of %s to %s", full_name, description)
 
-    def has_merge_request(self, full_name: str, head: str, base: str) -> bool:
+    def list_merge_requests(self, full_name: str, head: str, base: str):
         # https://docs.github.com/en/rest/reference/pulls#list-pull-requests
         response = requests.get(
             f"https://api.github.com/repos/{full_name}/pulls",
@@ -88,7 +88,10 @@ class GitHub:
         )
         result = response.json()
         response.raise_for_status()
-        return len(result) >= 1
+        return result
+
+    def close_merge_request(self, full_name: str, pull_number: int):
+        logging.info("Would have closed MR %s %d", full_name, pull_number)
 
 
 class ReadWriteGitHub(GitHub):
@@ -125,5 +128,15 @@ class ReadWriteGitHub(GitHub):
             auth=self.auth,
             headers={"Accept": "application/vnd.github.v3+json"},
             json={"description": description},
+        )
+        response.raise_for_status()
+
+    def close_merge_request(self, full_name: str, pull_number: int):
+        # https://docs.github.com/en/rest/reference/pulls#update-a-pull-request
+        response = requests.patch(
+            f"https://api.github.com/repos/{full_name}/pulls/{pull_number}",
+            auth=self.auth,
+            headers={"Accept": "application/vnd.github.v3+json"},
+            json={"state": "closed"},
         )
         response.raise_for_status()

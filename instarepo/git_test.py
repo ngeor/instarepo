@@ -110,7 +110,25 @@ def test_push(mocker: MockerFixture):
 
     # assert
     mock.assert_called_once_with(
-        ["git", "push", "-u", "origin", "HEAD"], check=True, cwd="/tmp/hello"
+        ["git", "push", "--force-with-lease", "-u", "origin", "HEAD"],
+        check=True,
+        cwd="/tmp/hello",
+    )
+
+
+def test_delete_remote_branch(mocker: MockerFixture):
+    # arrange
+    mock = mocker.patch("subprocess.run")
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+
+    # act
+    git.delete_remote_branch("obsolete-branch")
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "push", "--delete", "origin", "obsolete-branch"],
+        check=True,
+        cwd="/tmp/hello",
     )
 
 
