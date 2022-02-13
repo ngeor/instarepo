@@ -1,3 +1,7 @@
+"""
+Applies fixes to a repository that is either locally checked out
+or remote on GitHub.
+"""
 import logging
 import tempfile
 from typing import Iterable, List, Optional
@@ -21,23 +25,23 @@ from ..credentials import build_requests_auth
 
 
 class FixCommand:
+    """
+    Applies fixes to a repository that is either locally checked out
+    or remote on GitHub.
+    """
+
     def __init__(self, args):
         if args.local_dir:
-            self.local_dir = args.local_dir
-            self.github = None
-            self.repo_source = None
+            self.delegate = FixLocal(args)
         else:
-            auth = build_requests_auth(args)
-            if args.dry_run:
-                self.github = instarepo.github.GitHub(auth=auth)
-            else:
-                self.github = instarepo.github.ReadWriteGitHub(auth=auth)
-            self.repo_source = (
-                instarepo.repo_source.RepoSourceBuilder()
-                .with_github(self.github)
-                .with_args(args)
-                .build()
-            )
+            self.delegate = FixRemote(args)
+
+    def run(self):
+        self.delegate.run()
+
+
+class AbstractFix:
+    def __init__(self, args):
         self.dry_run: bool = args.dry_run
         self.verbose: bool = args.verbose
         self.fixer_classes = select_fixer_classes(args.only_fixers, args.except_fixers)
@@ -50,29 +54,21 @@ class FixCommand:
             "Using fixers %s",
             ", ".join(map(fixer_class_to_fixer_key, self.fixer_classes)),
         )
-        assert (
-            self.repo_source or self.local_dir
-        ), "Either repo_source or local_dir should be set"
-        if self.repo_source:
-            repos = self.repo_source.get()
-            for repo in repos:
-                self.process(repo)
-        elif self.local_dir:
-            self.process_local()
 
-    def process(self, repo: instarepo.github.Repo):
-        assert self.github, "github should be set when processing repos"
-        logging.info("Processing repo %s", repo.name)
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            logging.debug("Cloning repo into temp dir %s", tmpdirname)
-            git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
-            processor = RepoProcessor(
-                repo, self.github, git, self.fixer_classes, self.dry_run, self.verbose
-            )
-            processor.process()
 
-    def process_local(self):
-        assert self.local_dir, "local_dir should be set when processing local directory"
+class FixLocal(AbstractFix):
+    """
+    Applies fixes to a locally checked-out repository.
+    """
+
+    def __init__(self, args):
+        super().__init__(args)
+        if not args.local_dir:
+            raise ValueError("local_dir must be specified")
+        self.local_dir = args.local_dir
+
+    def run(self):
+        super().run()
         logging.info("Processing local repo %s", self.local_dir)
         git = instarepo.git.GitWorkingDir(self.local_dir, quiet=not self.verbose)
         composite_fixer = create_composite_fixer(
@@ -81,101 +77,126 @@ class FixCommand:
         composite_fixer.run()
 
 
-class RepoProcessor:
-    def __init__(
+BRANCH_NAME = "instarepo_branch"
+
+
+class FixRemote(AbstractFix):
+    """
+    Applies fixes to a GitHub repository.
+    """
+
+    def __init__(self, args):
+        super().__init__(args)
+        if args.local_dir:
+            raise ValueError("local_dir must be empty")
+        auth = build_requests_auth(args)
+        if args.dry_run:
+            self.github = instarepo.github.GitHub(auth=auth)
+        else:
+            self.github = instarepo.github.ReadWriteGitHub(auth=auth)
+        self.repo_source = (
+            instarepo.repo_source.RepoSourceBuilder()
+            .with_github(self.github)
+            .with_args(args)
+            .build()
+        )
+
+    def run(self):
+        super().run()
+        repos = self.repo_source.get()
+        for repo in repos:
+            self._process(repo)
+
+    def _process(self, repo: instarepo.github.Repo):
+        logging.info("Processing repo %s", repo.name)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logging.debug("Cloning repo into temp dir %s", tmpdirname)
+            git = instarepo.git.clone(repo.ssh_url, tmpdirname, quiet=not self.verbose)
+            self._process_in_temp_directory(repo, git)
+
+    def _process_in_temp_directory(
+        self, repo: instarepo.github.Repo, git: instarepo.git.GitWorkingDir
+    ):
+        is_remote_branch_present = git.is_remote_branch_present(BRANCH_NAME)
+        needs_force_push = False
+        behind = 0
+        ahead = 0
+        if is_remote_branch_present:
+            behind, ahead = git.get_behind_ahead(
+                f"origin/{repo.default_branch}", f"origin/{BRANCH_NAME}"
+            )
+            logging.debug(
+                "Remote branch exists and is %d commits behind and %d commits ahead of %s",
+                behind,
+                ahead,
+                repo.default_branch,
+            )
+            if behind > 0:
+                logging.info(
+                    "Remote branch is behind default branch, starting from scratch"
+                )
+                git.create_branch(BRANCH_NAME)
+                needs_force_push = True
+                behind = 0
+                ahead = 0
+            else:
+                git.checkout(BRANCH_NAME)
+        else:
+            git.create_branch(BRANCH_NAME)
+        composite_fixer = create_composite_fixer(
+            self.fixer_classes, git, repo, self.github, self.verbose
+        )
+        changes = composite_fixer.run()
+        if changes:
+            self._create_merge_request(repo, git, changes, needs_force_push)
+        elif ahead > 0:
+            # no changes in this run, but we are ahead of default branch, we can auto-merge
+            self._auto_merge_existing_mr(repo)
+            if is_remote_branch_present:
+                if self.dry_run:
+                    logging.info("Would have deleted remote branch")
+                else:
+                    git.delete_remote_branch(BRANCH_NAME)
+        else:
+            # no changes and at the same point as the default branch, we can auto-close the MR
+            if is_remote_branch_present:
+                if self.dry_run:
+                    logging.info("Would have deleted remote branch")
+                else:
+                    git.delete_remote_branch(BRANCH_NAME)
+            self._close_mr_if_exists(repo)
+
+    def _create_merge_request(
         self,
         repo: instarepo.github.Repo,
-        github: instarepo.github.GitHub,
         git: instarepo.git.GitWorkingDir,
-        fixer_classes,
-        dry_run: bool = False,
-        verbose: bool = False,
+        changes: Iterable[str],
+        needs_force_push: bool,
     ):
-        self.repo = repo
-        self.github = github
-        self.git = git
-        self.fixer_classes = fixer_classes
-        self.dry_run = dry_run
-        self.branch_name = "instarepo_branch"
-        self.verbose = verbose
-
-    def process(self):
-        self.git.create_branch(self.branch_name)
-        changes = self.run_fixes()
-        if self.is_branch_not_at_default():
-            if not changes:
-                logging.warning("Git reports changes but the internal changes do not.")
-                logging.warning("This is likely a bug in the internal checker code.")
-            self.create_merge_request(changes)
-        else:
-            if changes:
-                logging.warning(
-                    "Git does not report changes but the internal checkers report the following changes:"
-                )
-                for change in changes:
-                    logging.warning(change)
-                logging.warning("This is likely a bug in the internal checker code.")
-            else:
-                logging.debug("No changes found for repo %s", self.repo.name)
-            self.auto_close_mr()
-
-    def run_fixes(self):
-        composite_fixer = create_composite_fixer(
-            self.fixer_classes, self.git, self.repo, self.github, self.verbose
-        )
-        return composite_fixer.run()
-
-    def is_branch_not_at_default(self):
-        """
-        Checks if the instarepo branch is pointing to a different SHA
-        than the default branch (which would imply we have extra commits).
-        """
-        current_sha = self.git.rev_parse(self.branch_name)
-        main_sha = self.git.rev_parse(self.repo.default_branch)
-        return current_sha != main_sha
-
-    def list_merge_requests(self):
-        head = self.github.auth.username + ":" + self.branch_name
-        return self.github.list_merge_requests(
-            self.repo.full_name, head, self.repo.default_branch
-        )
-
-    def create_merge_request(self, changes: Iterable[str]):
         if self.dry_run:
-            logging.info("Would have created PR for repo %s", self.repo.name)
+            logging.info("Would have created PR for repo %s", repo.name)
             return
-        self.git.push()
-        if len(self.list_merge_requests()) > 0:
-            logging.info("PR already exists for repo %s", self.repo.name)
+        git.push(force=needs_force_push)
+        if len(self._list_merge_requests(repo)) > 0:
+            logging.info("PR already exists for repo %s", repo.name)
         else:
             html_url = self.github.create_merge_request(
-                self.repo.full_name,
-                self.branch_name,
-                self.repo.default_branch,
+                repo.full_name,
+                BRANCH_NAME,
+                repo.default_branch,
                 "instarepo automatic PR",
                 format_body(changes),
             )
-            logging.info("Created PR for repo %s - %s", self.repo.name, html_url)
+            logging.info("Created PR for repo %s - %s", repo.name, html_url)
 
-    def auto_close_mr(self):
-        self.delete_remote_branch_if_exists()
-        self.close_mr_if_exists()
+    def _list_merge_requests(self, repo: instarepo.github.Repo):
+        head = self.github.auth.username + ":" + BRANCH_NAME
+        return self.github.list_merge_requests(
+            repo.full_name, head, repo.default_branch
+        )
 
-    def delete_remote_branch_if_exists(self):
-        remote_branch_sha = ""
-        try:
-            remote_branch_sha = self.git.rev_parse(f"remotes/origin/{self.branch_name}")
-        except:  # pylint: disable=bare-except
-            pass
-        if not remote_branch_sha:
-            return
-        if self.dry_run:
-            logging.info("Would have deleted remote branch")
-            return
-        self.git.delete_remote_branch(self.branch_name)
-
-    def close_mr_if_exists(self):
-        merge_requests = self.list_merge_requests()
+    def _close_mr_if_exists(self, repo: instarepo.github.Repo):
+        merge_requests = self._list_merge_requests(repo)
         if not merge_requests:
             return
         merge_request = merge_requests[0]
@@ -183,7 +204,17 @@ class RepoProcessor:
             logging.warning("Null item in MR result")
             return
         number = merge_request["number"]
-        self.github.close_merge_request(self.repo.full_name, number)
+        self.github.close_merge_request(repo.full_name, number)
+
+    def _auto_merge_existing_mr(self, repo: instarepo.github.Repo):
+        merge_requests = self._list_merge_requests(repo)
+        for merge_request in merge_requests:
+            number = merge_request["number"]
+            details = self.github.get_merge_request(repo.full_name, number)
+            if details["mergeable"]:
+                self.github.merge_merge_request(repo.full_name, number)
+                return True
+        return False
 
 
 def create_composite_fixer(

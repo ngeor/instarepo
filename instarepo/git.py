@@ -52,9 +52,26 @@ class GitWorkingDir:
         args.extend(["-m", message])
         subprocess.run(args, check=True, cwd=self.dir)
 
-    def push(self, remote_name: str = "origin") -> None:
+    def push(self, force: bool = False, remote_name: str = "origin") -> None:
+        args = ["git", "push"]
+        if self.quiet:
+            args.append("-q")
+        if force:
+            args.append("--force-with-lease")
+        args.extend(["-u", remote_name, "HEAD"])
         subprocess.run(
-            ["git", "push", "--force-with-lease", "-u", remote_name, "HEAD"],
+            args,
+            check=True,
+            cwd=self.dir,
+        )
+
+    def delete_local_branch(self, branch_name: str) -> None:
+        args = ["git", "branch"]
+        if self.quiet:
+            args.append("-q")
+        args.extend(["-D", branch_name])
+        subprocess.run(
+            args,
             check=True,
             cwd=self.dir,
         )
@@ -62,8 +79,12 @@ class GitWorkingDir:
     def delete_remote_branch(
         self, branch_name: str, remote_name: str = "origin"
     ) -> None:
+        args = ["git", "push"]
+        if self.quiet:
+            args.append("-q")
+        args.extend(["--delete", remote_name, branch_name])
         subprocess.run(
-            ["git", "push", "--delete", remote_name, branch_name],
+            args,
             check=True,
             cwd=self.dir,
         )
@@ -127,6 +148,27 @@ class GitWorkingDir:
         return datetime.datetime.strptime(
             result.stdout.split(" ")[0], "%Y-%m-%d"
         ).date()
+
+    def is_remote_branch_present(self, branch: str, remote="origin"):
+        remote_branch_sha = ""
+        try:
+            remote_branch_sha = self.rev_parse(f"remotes/origin/{branch}")
+        except:  # pylint: disable=bare-except
+            pass
+        return len(remote_branch_sha) > 0
+
+    def get_behind_ahead(self, base: str, head: str):
+        # git rev-list --left-right --count origin/trunk...trunk
+        # 12      0
+        result = subprocess.run(
+            ["git", "rev-list", "--left-right", "--count", f"{base}...{head}"],
+            check=True,
+            cwd=self.dir,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+        )
+        parts = result.stdout.split("\t")
+        return int(parts[0]), int(parts[1])
 
 
 def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:

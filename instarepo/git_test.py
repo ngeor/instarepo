@@ -1,3 +1,8 @@
+"""
+Unit tests for the git module.
+"""
+import collections
+import subprocess
 from pytest_mock import MockerFixture
 import instarepo.git
 
@@ -110,7 +115,7 @@ def test_push(mocker: MockerFixture):
 
     # assert
     mock.assert_called_once_with(
-        ["git", "push", "--force-with-lease", "-u", "origin", "HEAD"],
+        ["git", "push", "-u", "origin", "HEAD"],
         check=True,
         cwd="/tmp/hello",
     )
@@ -136,3 +141,47 @@ def test_join():
     git = instarepo.git.GitWorkingDir("/tmp/hello")
     filename = git.join("src", "index.js").replace("\\", "/")
     assert filename == "/tmp/hello/src/index.js"
+
+
+def test_is_remote_branch_present(mocker: MockerFixture):
+    # arrange
+    result_type = collections.namedtuple("ProcessResult", ["stdout"])
+    result = result_type("remote-ref")
+    mock = mocker.patch("subprocess.run")
+    mock.return_value = result
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+
+    # act
+    result = git.is_remote_branch_present("existing-branch")
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "rev-parse", "-q", "--verify", "remotes/origin/existing-branch"],
+        check=True,
+        cwd="/tmp/hello",
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    assert result
+
+
+def test_is_remote_branch_absent(mocker: MockerFixture):
+    # arrange
+    result_type = collections.namedtuple("ProcessResult", ["stdout"])
+    result = result_type("")
+    mock = mocker.patch("subprocess.run")
+    mock.return_value = result
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+
+    # act
+    result = git.is_remote_branch_present("missing-branch")
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "rev-parse", "-q", "--verify", "remotes/origin/missing-branch"],
+        check=True,
+        cwd="/tmp/hello",
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    assert not result

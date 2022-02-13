@@ -90,8 +90,23 @@ class GitHub:
         response.raise_for_status()
         return result
 
+    def get_merge_request(self, full_name: str, pull_number: int):
+        href = f"https://api.github.com/repos/{full_name}/pulls/{pull_number}"
+        return self.get_json(href)
+
     def close_merge_request(self, full_name: str, pull_number: int):
         logging.info("Would have closed MR %s %d", full_name, pull_number)
+
+    def merge_merge_request(self, full_name: str, pull_number: int):
+        logging.info("Would have merged MR %s %d", full_name, pull_number)
+
+    def get_json(self, href: str):
+        response = requests.get(
+            href, auth=self.auth, headers={"Accept": "application/vnd.github.v3+json"}
+        )
+        result = response.json()
+        response.raise_for_status()
+        return result
 
 
 class ReadWriteGitHub(GitHub):
@@ -133,10 +148,21 @@ class ReadWriteGitHub(GitHub):
 
     def close_merge_request(self, full_name: str, pull_number: int):
         # https://docs.github.com/en/rest/reference/pulls#update-a-pull-request
+        logging.info("Closing PR %s %d", full_name, pull_number)
         response = requests.patch(
             f"https://api.github.com/repos/{full_name}/pulls/{pull_number}",
             auth=self.auth,
             headers={"Accept": "application/vnd.github.v3+json"},
             json={"state": "closed"},
+        )
+        response.raise_for_status()
+
+    def merge_merge_request(self, full_name: str, pull_number: int):
+        # https://docs.github.com/en/rest/reference/pulls#merge-a-pull-request
+        logging.info("Merging PR %s %d", full_name, pull_number)
+        response = requests.put(
+            f"https://api.github.com/repos/{full_name}/pulls/{pull_number}/merge",
+            auth=self.auth,
+            headers={"Accept": "application/vnd.github.v3+json"},
         )
         response.raise_for_status()
