@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2022-02-13
+
+### Dependencies
+
+- Update dependency pytest to v7.0.1
+
+### Features
+
+- Auto-closing MRs that no longer have changes
+- Auto-merge MRs
+
+### Miscellaneous Tasks
+
+- Use a dedicated dependencies group in changelog, sort commits alphabetically
+
 ## [0.6.0] - 2022-02-11
 
 ### Dependencies
