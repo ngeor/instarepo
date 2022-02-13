@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2022-02-13
+
+### Features
+
+- [**breaking**] Using GitHub Actions also for .NET projects
+
 ## [0.7.0] - 2022-02-13
 
 ### Dependencies
