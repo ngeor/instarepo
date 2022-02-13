@@ -9,7 +9,12 @@ class GitWorkingDir:
         self.quiet = quiet
 
     def join(self, *args) -> str:
-        return os.path.join(self.dir, *args)
+        root = self.dir
+        for arg in args:
+            parts = arg.replace("\\", "/").split("/")
+            for part in parts:
+                root = os.path.join(root, part)
+        return root
 
     def isfile(self, *args) -> bool:
         return os.path.isfile(self.join(*args))

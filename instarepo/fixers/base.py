@@ -81,8 +81,17 @@ class MissingFileFix:
         return True
 
     def _ensure_directories(self):
-        root = self.git.dir
-        for directory in self.directory_parts:
-            root = os.path.join(root, directory)
+        ensure_directories(self.git, *self.directory_parts)
+
+def ensure_directories(git: instarepo.git.GitWorkingDir, *args):
+    """
+    Ensures that the given directories exist in the Git working directory.
+    You can provide directories one by one, or separated by slash.
+    """
+    root = git.dir
+    for directory in args:
+        parts = directory.replace("\\", "/").split("/")
+        for part in parts:
+            root = os.path.join(root, part)
             if not os.path.isdir(root):
                 os.mkdir(root)

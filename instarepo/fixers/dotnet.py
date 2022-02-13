@@ -3,11 +3,12 @@ import logging
 import os
 import os.path
 import xml.etree.ElementTree as ET
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import instarepo.git
+import instarepo.github
 import instarepo.xml_utils
-from instarepo.fixers.base import MissingFileFix
+from .base import ensure_directories
 from .finders import is_file_of_extension
 
 
@@ -95,13 +96,56 @@ class DotNetFrameworkVersionFix:
         self.result.append(msg)
 
 
-class MustHaveCSharpAppVeyorFix(MissingFileFix):
-    """If missing, creates an appveyor.yml file for CSharp projects"""
+class MustHaveGitHubActionFix:
+    """
+    Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
+    Does not work for locally checked out repositories.
+    """
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, "appveyor.yml")
+    def __init__(
+        self,
+        git: instarepo.git.GitWorkingDir,
+        repo: Optional[instarepo.github.Repo],
+        **kwargs,
+    ):
+        self.git = git
+        self.repo = repo
 
-    def should_process_repo(self) -> bool:
+    def run(self):
+        if not self._should_process_repo():
+            return []
+
+        if not self.repo:
+            return []
+
+        expected_contents = get_workflow_contents(self.repo)
+        dir_name = ".github/workflows"
+        ensure_directories(self.git, dir_name)
+        file_name = dir_name + "/build.yml"
+        absolute_file_name = self.git.join(file_name)
+        if os.path.isfile(absolute_file_name):
+            with open(absolute_file_name, "r", encoding="utf-8") as file:
+                old_contents = file.read()
+        else:
+            old_contents = ""
+        if expected_contents != old_contents:
+            with open(absolute_file_name, "w", encoding="utf-8") as file:
+                file.write(expected_contents)
+            self.git.add(file_name)
+            if old_contents:
+                msg = "chore: Updated GitHub Actions workflow for .NET project"
+            else:
+                msg = "chore: Added GitHub Actions workflow for .NET project"
+            self._rm_appveyor()
+            self.git.commit(msg)
+            return [msg]
+        if self._rm_appveyor():
+            msg = "chore: Removed appveyor.yml from .NET project"
+            self.git.commit(msg)
+            return [msg]
+        return []
+
+    def _should_process_repo(self) -> bool:
         """
         Checks if the repo should be processed.
         The repo should be processed if it contains exactly one sln file
@@ -120,19 +164,36 @@ class MustHaveCSharpAppVeyorFix(MissingFileFix):
             return False
         return len(get_projects_from_sln_file(sln_path)) > 0
 
-    def get_contents(self):
-        return """version: 1.0.{build}
-assembly_info:
-  patch: true
-  file: '**\\AssemblyInfo.*'
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}'
-before_build:
-- nuget restore
-build:
-  verbosity: minimal
-"""
+    def _rm_appveyor(self):
+        if self.git.isfile("appveyor.yml"):
+            self.git.rm("appveyor.yml")
+            return True
+        return False
+
+
+def get_workflow_contents(repo: instarepo.github.Repo):
+    return """name: CI
+
+on:
+  push:
+    branches: [ trunk ]
+  pull_request:
+    branches: [ trunk ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+    - run: dotnet build
+    - run: dotnet test
+""".replace(
+        "trunk", repo.default_branch
+    )
 
 
 def get_projects_from_sln_file(path: str) -> List[str]:

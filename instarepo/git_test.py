@@ -142,6 +142,10 @@ def test_join():
     filename = git.join("src", "index.js").replace("\\", "/")
     assert filename == "/tmp/hello/src/index.js"
 
+def test_join_with_slashes_in_string():
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+    filename = git.join("src/index.js").replace("\\", "/")
+    assert filename == "/tmp/hello/src/index.js"
 
 def test_is_remote_branch_present(mocker: MockerFixture):
     # arrange
