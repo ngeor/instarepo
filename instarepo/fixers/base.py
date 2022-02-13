@@ -83,6 +83,7 @@ class MissingFileFix:
     def _ensure_directories(self):
         ensure_directories(self.git, *self.directory_parts)
 
+
 def ensure_directories(git: instarepo.git.GitWorkingDir, *args):
     """
     Ensures that the given directories exist in the Git working directory.
