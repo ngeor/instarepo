@@ -7,7 +7,7 @@ name = "pypi"
 requests = "==2.27.1"
 
 [dev-packages]
-pytest = "==7.0.0"
+pytest = "==7.0.1"
 black = "==22.1.0"
 pytest-mock = "==3.7.0"
 pylint = "==2.12.2"
