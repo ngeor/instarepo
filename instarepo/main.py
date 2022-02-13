@@ -9,7 +9,7 @@ import instarepo.commands.list
 import instarepo.commands.login
 import instarepo.commands.logout
 
-VERSION = "0.8.0"
+VERSION = "0.9.0-alpha"
 
 
 def main():
