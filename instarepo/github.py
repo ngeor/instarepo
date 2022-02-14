@@ -108,6 +108,15 @@ class GitHub:
         response.raise_for_status()
         return result
 
+    def create_issue_comment(self, full_name: str, issue_number: int, body: str):
+        logging.info("Would have created issue comment %s %d", full_name, issue_number)
+
+    def list_check_runs(self, full_name: str, sha: str):
+        # https://docs.github.com/en/rest/reference/checks#list-check-runs-for-a-git-reference
+        return self.get_json(
+            f"https://api.github.com/repos/{full_name}/commits/{sha}/check-runs"
+        )
+
 
 class ReadWriteGitHub(GitHub):
     """
@@ -164,5 +173,15 @@ class ReadWriteGitHub(GitHub):
             f"https://api.github.com/repos/{full_name}/pulls/{pull_number}/merge",
             auth=self.auth,
             headers={"Accept": "application/vnd.github.v3+json"},
+        )
+        response.raise_for_status()
+
+    def create_issue_comment(self, full_name: str, issue_number: int, body: str):
+        # https://docs.github.com/en/rest/reference/issues#create-an-issue-comment
+        response = requests.post(
+            f"https://api.github.com/repos/{full_name}/issues/{issue_number}/comments",
+            auth=self.auth,
+            headers={"Accept": "application/vnd.github.v3+json"},
+            json={"body": body},
         )
         response.raise_for_status()

@@ -151,8 +151,8 @@ class FixRemote(AbstractFix):
             self._create_merge_request(repo, git, changes, needs_force_push)
         elif ahead > 0:
             # no changes in this run, but we are ahead of default branch, we can auto-merge
-            self._auto_merge_existing_mr(repo)
-            if is_remote_branch_present:
+            merged = self._auto_merge_existing_mr(repo)
+            if is_remote_branch_present and merged:
                 if self.dry_run:
                     logging.info("Would have deleted remote branch")
                 else:
@@ -200,21 +200,52 @@ class FixRemote(AbstractFix):
         if not merge_requests:
             return
         merge_request = merge_requests[0]
-        if not merge_request:
-            logging.warning("Null item in MR result")
-            return
         number = merge_request["number"]
+        self.github.create_issue_comment(
+            repo.full_name,
+            number,
+            "It seems the changes in this MR have already been fixed, auto-closing.",
+        )
         self.github.close_merge_request(repo.full_name, number)
 
     def _auto_merge_existing_mr(self, repo: instarepo.github.Repo):
         merge_requests = self._list_merge_requests(repo)
         for merge_request in merge_requests:
-            number = merge_request["number"]
-            details = self.github.get_merge_request(repo.full_name, number)
-            if details["mergeable"]:
-                self.github.merge_merge_request(repo.full_name, number)
+            if self._auto_merge_one_existing_mr(repo, merge_request):
                 return True
         return False
+
+    def _auto_merge_one_existing_mr(self, repo: instarepo.github.Repo, merge_request):
+        number = merge_request["number"]
+        details = self.github.get_merge_request(repo.full_name, number)
+        if not details["mergeable"]:
+            logging.debug("Cannot merge MR because GitHub reports it is not mergeable")
+            return False
+        mergeable_state = details["mergeable_state"]
+        if mergeable_state != "clean":
+            logging.debug(
+                f"Cannot merge MR because the mergeable state is not clean but {mergeable_state}"
+            )
+            return False
+        head_sha = merge_request["head"]["sha"]
+        check_runs = self.github.list_check_runs(repo.full_name, head_sha)
+        if check_runs["total_count"] <= 0:
+            logging.debug("Cannot merge MR because there are no check runs")
+            return False
+        for check_run in check_runs["check_runs"]:
+            status = check_run["status"]
+            if status != "completed":
+                logging.debug("Cannot merge MR because there are incomplete check runs")
+                return False
+            conclusion = check_run["conclusion"]
+            if conclusion != "success":
+                logging.debug(
+                    "Cannot merge MR because there are unsuccessful check runs"
+                )
+                return False
+
+        self.github.merge_merge_request(repo.full_name, number)
+        return True
 
 
 def create_composite_fixer(
