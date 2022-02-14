@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Bug Fixes
+
+- Fixed broken tests
+
 ## [0.8.0] - 2022-02-13
 
 ### Features
