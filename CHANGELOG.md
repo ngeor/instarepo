@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.8.1] - 2022-02-14
 
 ### Bug Fixes
 
+- Do not merge MRs with failed builds
 - Fixed broken tests
 
 ## [0.8.0] - 2022-02-13
