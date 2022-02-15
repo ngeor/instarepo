@@ -169,7 +169,7 @@ usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN]
                      [--pushed-before PUSHED_BEFORE] [--dry-run]
                      [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
                      --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
-                     [--local-dir LOCAL_DIR]
+                     [--local-dir LOCAL_DIR] [--auto-merge]
 
 Runs automatic fixes on the repositories
 
@@ -196,6 +196,7 @@ optional arguments:
                         Apply fixes for a project at a local working
                         directory. Skips all GitHub related calls and git
                         push.
+  --auto-merge          Automatically merge open MRs that pass CI.
 
 Authentication:
   -u USERNAME, --username USERNAME

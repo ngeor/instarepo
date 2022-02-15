@@ -190,7 +190,7 @@ jobs:
       with:
         dotnet-version: '3.1.x'
     - run: dotnet build
-    - run: dotnet test
+    - run: dotnet test -v normal
 """.replace(
         "trunk", repo.default_branch
     )

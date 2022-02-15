@@ -94,6 +94,7 @@ class FixRemote(AbstractFix):
             self.github = instarepo.github.GitHub(auth=auth)
         else:
             self.github = instarepo.github.ReadWriteGitHub(auth=auth)
+        self.auto_merge = args.auto_merge
         self.repo_source = (
             instarepo.repo_source.RepoSourceBuilder()
             .with_github(self.github)
@@ -149,7 +150,7 @@ class FixRemote(AbstractFix):
         changes = composite_fixer.run()
         if changes:
             self._create_merge_request(repo, git, changes, needs_force_push)
-        elif ahead > 0:
+        elif ahead > 0 and self.auto_merge:
             # no changes in this run, but we are ahead of default branch, we can auto-merge
             merged = self._auto_merge_existing_mr(repo)
             if is_remote_branch_present and merged:
@@ -157,7 +158,7 @@ class FixRemote(AbstractFix):
                     logging.info("Would have deleted remote branch")
                 else:
                     git.delete_remote_branch(BRANCH_NAME)
-        else:
+        elif ahead == 0:
             # no changes and at the same point as the default branch, we can auto-close the MR
             if is_remote_branch_present:
                 if self.dry_run:

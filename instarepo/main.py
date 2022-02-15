@@ -145,6 +145,12 @@ def _configure_fix_parser(parser: argparse.ArgumentParser):
         "--local-dir",
         help="Apply fixes for a project at a local working directory. Skips all GitHub related calls and git push.",
     )
+    parser.add_argument(
+        "--auto-merge",
+        action="store_true",
+        default=False,
+        help="Automatically merge open MRs that pass CI.",
+    )
 
 
 def _configure_analyze_parser(parser: argparse.ArgumentParser):
