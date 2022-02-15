@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2022-02-15
+
+### Features
+
+- [**breaking**] Only auto-merge PRs when a flag is given
+
 ## [0.8.1] - 2022-02-14
 
 ### Bug Fixes
