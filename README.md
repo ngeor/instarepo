@@ -225,8 +225,6 @@ Fixers:
 
 changelog.must_have_cliff_toml
     Ensures the configuration for git-cliff (cliff.toml) exists
-changelog.generate_changelog
-    Generates changelog with git-cliff
 ci.no_travis
     Removes the .travis.yml file
 ci.no_travis_badge

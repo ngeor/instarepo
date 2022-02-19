@@ -144,7 +144,6 @@ class TestSelectFixerClasses:
             instarepo.fixers.changelog.MustHaveCliffTomlFix,
             instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveGitHubActionFix,
-            instarepo.fixers.changelog.GenerateChangelogFix,
         ] == select_fixer_classes(only_fixers=["dotnet", "changelog"])
 
 
@@ -154,7 +153,7 @@ def test_classes_in_module():
 
 def test_try_get_fix_order():
     assert try_get_fixer_order(instarepo.fixers.dotnet.MustHaveGitHubActionFix) == 0
-    assert try_get_fixer_order(instarepo.fixers.changelog.GenerateChangelogFix) == 100
+    assert try_get_fixer_order(instarepo.fixers.changelog.MustHaveCliffTomlFix) == -100
 
 
 def test_create_composite_fixer():
