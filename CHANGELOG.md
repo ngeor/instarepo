@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2022-02-19
+
+### Bug Fixes
+
+- [**breaking**] Removed the generate changelog fixer because it is spammy
+
+### Miscellaneous Tasks
+
+- Single-sourcing the version
+
 ## [0.9.0] - 2022-02-15
 
 ### Features
