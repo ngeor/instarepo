@@ -417,7 +417,7 @@ Filtering:
 ### Creating a new release
 
 - Make sure you're on the latest of the default branch and there are no pending changes
-- Update the versions in `setup.cfg` and `instarepo/main.py`
+- Update the version in `instarepo/__init__.py`
 - Update the changelog with `git-cliff -t x.y.z -o CHANGELOG.md`
 - Commit with a message like "chore(release): prepare for version x.y.z"
 - Create a tag `vx.y.z`
@@ -425,6 +425,6 @@ Filtering:
 - Clean to make sure there are no build files with `git clean -fdx`
 - Build the wheel `python3 -m build` (inside pipenv)
 - Upload the wheel with `twine upload dist/*`
-- Update again the versions in `setup.cfg` and `instarepo/main.py` to set the
+- Update again the versions in `instarepo/__init__.py` to set the
   next development versions.
 - Commit with a message like "chore(release): prepare for next development iteration"

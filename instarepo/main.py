@@ -2,14 +2,13 @@
 import argparse
 import logging
 
+import instarepo
 import instarepo.commands.analyze
 import instarepo.commands.clone
 import instarepo.commands.fix
 import instarepo.commands.list
 import instarepo.commands.login
 import instarepo.commands.logout
-
-VERSION = "0.10.0-alpha"
 
 
 def main():
@@ -50,7 +49,9 @@ def parse_args(args=None):
     parser.add_argument(
         "--verbose", action="store_true", default=False, help="Verbose output"
     )
-    parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + instarepo.__version__
+    )
 
     subparsers = parser.add_subparsers(
         dest="subparser_name", help="Sub-commands help", required=True
