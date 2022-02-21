@@ -1,9 +1,7 @@
 """Fixes for Maven projects"""
-import logging
 import os
 import os.path
 import platform
-import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
@@ -17,89 +15,6 @@ import instarepo.xml_utils
 from instarepo.fixers.base import MissingFileFix
 from .finders import is_maven_project
 from .readme import locate_badges, merge_badges
-
-
-LOG_LEVEL = re.compile(r"^\[[A-Z]+\]")
-
-
-def filter_maven_output(output: str) -> str:
-    lines = output.splitlines()
-    modified_lines = (strip_log_level(line) for line in lines)
-    filtered_lines = (line for line in modified_lines if filter_line(line))
-    return os.linesep.join(filtered_lines)
-
-
-def strip_log_level(line: str) -> str:
-    line = LOG_LEVEL.sub("", line)
-    line = line.strip()
-    return line
-
-
-def filter_line(line: str) -> bool:
-    if not line:
-        return False
-    allow_prefixes = ["Updated ", "Updating "]
-    for allow_prefix in allow_prefixes:
-        if line.startswith(allow_prefix):
-            return True
-    return False
-
-
-def get_latest_artifact_version(group_id: str, artifact_id: str) -> Optional[str]:
-    """
-    Gets the latest published artifact version from central maven.
-
-    Example url: https://repo1.maven.org/maven2/com/github/ngeor/archetype-quickstart-jdk8/maven-metadata.xml
-
-    File structure:
-
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <metadata>
-        <groupId>com.github.ngeor</groupId>
-        <artifactId>archetype-quickstart-jdk8</artifactId>
-        <versioning>
-            <latest>2.8.0</latest>
-            <release>2.8.0</release>
-            <versions>
-                <version>1.0.14</version>
-                <version>1.0.22</version>
-                <version>1.0.27</version>
-                <version>1.0.29</version>
-                <version>1.1.0</version>
-                <version>1.1.1</version>
-                <version>1.1.2</version>
-                <version>1.2.0</version>
-                <version>1.3.0</version>
-                <version>1.4.0</version>
-                <version>2.0.0</version>
-                <version>2.1.0</version>
-                <version>2.2.0</version>
-                <version>2.3.0</version>
-                <version>2.4.0</version>
-                <version>2.5.0</version>
-                <version>2.8.0</version>
-            </versions>
-            <lastUpdated>20210925070507</lastUpdated>
-        </versioning>
-    </metadata>
-    ```
-    """
-    group_path = group_id.replace(".", "/")
-    url = (
-        f"https://repo1.maven.org/maven2/{group_path}/{artifact_id}/maven-metadata.xml"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    root = ET.fromstring(response.text)
-    versioning = root.find("versioning")
-    if versioning is not None:
-        release = versioning.find("release")
-        if release is not None:
-            return release.text
-
-    logging.warning("URL %s returned unexpected XML", url)
-    return None
 
 
 MAVEN_YML = """# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
