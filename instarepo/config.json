@@ -1,0 +1,12 @@
+{
+    "$schema": "./config.schema.json",
+    "defaults": {
+        "enabled": true,
+        "funding_yml": "./FUNDING.yml"
+    },
+    "repos": {
+        "my_repo": {
+            "enabled": false
+        }
+    }
+}
