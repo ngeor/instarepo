@@ -45,6 +45,20 @@ def test_parse_args_fix_minimal():
     assert result.subparser_name == "fix"
 
 
+def test_parse_args_fix_with_config_file_short():
+    """Tests the -c option is parsed"""
+    result = parse_args(args=["fix", "-c", "config.json"])
+    assert result.subparser_name == "fix"
+    assert result.config_file == "config.json"
+
+
+def test_parse_args_fix_with_config_file_long():
+    """Tests the --config-file option is parsed"""
+    result = parse_args(args=["fix", "--config-file", "config2.json"])
+    assert result.subparser_name == "fix"
+    assert result.config_file == "config2.json"
+
+
 def test_create_command_list():
     """Create ListCommand"""
     args = parse_args(args=["list", "-u", "jdoe", "-t", "secret"])

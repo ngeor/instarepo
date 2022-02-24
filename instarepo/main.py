@@ -152,6 +152,12 @@ def _configure_fix_parser(parser: argparse.ArgumentParser):
         default=False,
         help="Automatically merge open MRs that pass CI.",
     )
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        required=False,
+        help="The location of an optional configuration file",
+    )
 
 
 def _configure_analyze_parser(parser: argparse.ArgumentParser):

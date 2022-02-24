@@ -2,6 +2,7 @@
 Applies fixes to a repository that is either locally checked out
 or remote on GitHub.
 """
+import json
 import logging
 import tempfile
 from typing import Iterable, List, Optional
@@ -40,11 +41,20 @@ class FixCommand:
         self.delegate.run()
 
 
-class AbstractFix:
+class FixBase:
+    """
+    Base class for common features among FixLocal and FixRemote.
+    """
+
     def __init__(self, args):
         self.dry_run: bool = args.dry_run
         self.verbose: bool = args.verbose
         self.fixer_classes = select_fixer_classes(args.only_fixers, args.except_fixers)
+        self.config_file = args.config_file
+        if args.config_file:
+            with open(args.config_file, "r", encoding="utf-8") as file:
+                self.config = json.load(file)
+                print(self.config)
 
     def run(self):
         if not self.fixer_classes:
@@ -56,7 +66,7 @@ class AbstractFix:
         )
 
 
-class FixLocal(AbstractFix):
+class FixLocal(FixBase):
     """
     Applies fixes to a locally checked-out repository.
     """
@@ -80,7 +90,7 @@ class FixLocal(AbstractFix):
 BRANCH_NAME = "instarepo_branch"
 
 
-class FixRemote(AbstractFix):
+class FixRemote(FixBase):
     """
     Applies fixes to a GitHub repository.
     """

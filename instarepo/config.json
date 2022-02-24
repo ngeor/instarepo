@@ -5,7 +5,7 @@
         "funding_yml": "./FUNDING.yml"
     },
     "repos": {
-        "my_repo": {
+        "ngeor/my_repo": {
             "enabled": false
         }
     }
