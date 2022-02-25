@@ -1,10 +1,12 @@
 """Unit tests for fix.py"""
+import collections
 import os
 
 import pytest
 
 import instarepo.fixers.base
 import instarepo.fixers.changelog
+import instarepo.fixers.config
 import instarepo.fixers.dotnet
 import instarepo.fixers.maven
 import instarepo.git
@@ -82,10 +84,16 @@ def test_fixer_class_to_fixer_key():
 def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     """Tests that it is possible to instantiate all fixers"""
     mock_git = instarepo.git.GitWorkingDir("/tmp")
+    mock_config = instarepo.fixers.config.PartialConfig({})
     mock_github = ()
-    mock_repo = ()
+    repo_type = collections.namedtuple("Repo", ["full_name"])
+    mock_repo = repo_type("ngeor/test")
     instance = fixer_class(
-        git=mock_git, repo=mock_repo, github=mock_github, verbose=False
+        git=mock_git,
+        config=mock_config,
+        repo=mock_repo,
+        github=mock_github,
+        verbose=False,
     )
     assert instance
 
@@ -95,7 +103,10 @@ def test_can_create_fixer_for_local_dir(
 ):  # pylint: disable=redefined-outer-name
     """Tests that it is possible to instantiate all fixers without repo/github instances"""
     mock_git = instarepo.git.GitWorkingDir("/tmp")
-    instance = fixer_class(git=mock_git, repo=None, github=None, verbose=False)
+    mock_config = instarepo.fixers.config.PartialConfig({})
+    instance = fixer_class(
+        git=mock_git, config=mock_config, repo=None, github=None, verbose=False
+    )
     assert instance
 
 
@@ -164,7 +175,7 @@ def test_create_composite_fixer():
         instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
     ]
     # act
-    composite_fixer = create_composite_fixer(fixer_classes, git)
+    composite_fixer = create_composite_fixer(fixer_classes, git, config=())
     # assert
     assert composite_fixer
     assert isinstance(composite_fixer, instarepo.fixers.base.CompositeFix)

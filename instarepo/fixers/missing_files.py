@@ -1,10 +1,10 @@
-import os.path
 import requests
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
 from instarepo.fixers.config import Config
 from .finders import is_lazarus_project, is_maven_project, is_vb6_project
+from typing import Optional
 
 
 class MustHaveReadmeFix(MissingFileFix):
@@ -56,18 +56,27 @@ class MustHaveGitHubFundingFix(MissingFileFix):
     """
 
     def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, config: Config, **kwargs
+        self,
+        git: instarepo.git.GitWorkingDir,
+        config: Config,
+        repo: Optional[
+            instarepo.github.Repo
+        ],  # TODO figure out repo name for local directory
+        **kwargs,
     ):
         super().__init__(git, ".github/FUNDING.yml")
-        self.repo = repo
-        self.contents = ""
-        template = config.get_setting(repo.full_name, "funding_yml")
-        if template and os.path.isfile(template):
-            with open(template, "r", encoding="utf-8") as file:
-                self.contents = file.read()
+        if repo:
+            self.repo = repo
+            self.contents = ""
+            template = config.get_setting(repo.full_name, "funding_yml")
+            if template:
+                with open(template, "r", encoding="utf-8") as file:
+                    self.contents = file.read()
 
     def should_process_repo(self):
-        return not self.repo.private and not self.repo.fork and self.contents
+        return (
+            self.repo and not self.repo.private and not self.repo.fork and self.contents
+        )
 
     def get_contents(self):
         return self.contents

@@ -2,7 +2,6 @@
 Applies fixes to a repository that is either locally checked out
 or remote on GitHub.
 """
-import json
 import logging
 import tempfile
 from typing import Iterable, List, Optional
@@ -13,6 +12,7 @@ import instarepo.repo_source
 import instarepo.fixers.base
 import instarepo.fixers.changelog
 import instarepo.fixers.ci
+import instarepo.fixers.config
 import instarepo.fixers.dotnet
 import instarepo.fixers.license
 import instarepo.fixers.maven
@@ -50,11 +50,7 @@ class FixBase:
         self.dry_run: bool = args.dry_run
         self.verbose: bool = args.verbose
         self.fixer_classes = select_fixer_classes(args.only_fixers, args.except_fixers)
-        self.config_file = args.config_file
-        if args.config_file:
-            with open(args.config_file, "r", encoding="utf-8") as file:
-                self.config = json.load(file)
-                print(self.config)
+        self.config = instarepo.fixers.config.load_config(args.config_file)
 
     def run(self):
         if not self.fixer_classes:
@@ -82,7 +78,7 @@ class FixLocal(FixBase):
         logging.info("Processing local repo %s", self.local_dir)
         git = instarepo.git.GitWorkingDir(self.local_dir, quiet=not self.verbose)
         composite_fixer = create_composite_fixer(
-            self.fixer_classes, git, verbose=self.verbose
+            self.fixer_classes, git=git, config=self.config, verbose=self.verbose
         )
         composite_fixer.run()
 
@@ -116,7 +112,8 @@ class FixRemote(FixBase):
         super().run()
         repos = self.repo_source.get()
         for repo in repos:
-            self._process(repo)
+            if self.config.get_setting(repo.full_name, "enabled"):
+                self._process(repo)
 
     def _process(self, repo: instarepo.github.Repo):
         logging.info("Processing repo %s", repo.name)
@@ -155,7 +152,12 @@ class FixRemote(FixBase):
         else:
             git.create_branch(BRANCH_NAME)
         composite_fixer = create_composite_fixer(
-            self.fixer_classes, git, repo, self.github, self.verbose
+            self.fixer_classes,
+            git=git,
+            config=self.config,
+            repo=repo,
+            github=self.github,
+            verbose=self.verbose,
         )
         changes = composite_fixer.run()
         if changes:
@@ -262,6 +264,7 @@ class FixRemote(FixBase):
 def create_composite_fixer(
     fixer_classes,
     git: instarepo.git.GitWorkingDir,
+    config: instarepo.fixers.config.Config,
     repo: Optional[instarepo.github.Repo] = None,
     github: Optional[instarepo.github.GitHub] = None,
     verbose: bool = False,
@@ -270,7 +273,7 @@ def create_composite_fixer(
         list(
             map(
                 lambda fixer_class: fixer_class(
-                    git=git, repo=repo, github=github, verbose=verbose
+                    git=git, repo=repo, github=github, config=config, verbose=verbose
                 ),
                 fixer_classes,
             )
