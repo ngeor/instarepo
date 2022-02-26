@@ -2,32 +2,31 @@ import datetime
 import os.path
 import re
 
-from typing import Optional
-
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
 
 
-def _repl(m: re.Match, year: int) -> str:
-    is_year_range = m.group(4)
+def _repl(match: re.Match, year: int) -> str:
+    is_year_range = match.group(4)
     if is_year_range:
-        is_same_year = str(year) == m.group(4)
+        is_same_year = str(year) == match.group(4)
         if is_same_year:
-            return m.group(0)
+            return match.group(0)
         else:
-            return m.group(1) + m.group(2) + "-" + str(year)
+            return match.group(1) + match.group(2) + "-" + str(year)
     else:
-        is_same_year = str(year) == m.group(2)
+        is_same_year = str(year) == match.group(2)
         if is_same_year:
-            return m.group(0)
+            return match.group(0)
         else:
-            return m.group(0) + "-" + str(year)
+            return match.group(0) + "-" + str(year)
 
 
 def update_copyright_year(contents: str, year: int) -> str:
-    x = re.compile(r"^(Copyright \(c\) )([0-9]{4})(-([0-9]{4}))?", re.M)
-    return x.sub(lambda m: _repl(m, year), contents)
+    copyright_regex = re.compile(r"^(Copyright \(c\) )([0-9]{4})(-([0-9]{4}))?", re.M)
+    return copyright_regex.sub(lambda m: _repl(m, year), contents)
 
 
 class CopyrightYearFix:
@@ -37,31 +36,25 @@ class CopyrightYearFix:
     Does not run for forks, private repos, and local git repos.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs
-    ):
-        self.git = git
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
 
     def run(self):
-        if not self.repo or self.repo.private or self.repo.fork:
+        if not self.context.repo or self.context.repo.private or self.context.repo.fork:
             return []
-        filename = os.path.join(self.git.dir, "LICENSE")
+        filename = self.context.git.join("LICENSE")
         if not os.path.isfile(filename):
             return []
-        with open(filename, "r", encoding="utf-8") as f:
-            old_contents = f.read()
+        with open(filename, "r", encoding="utf-8") as file:
+            old_contents = file.read()
         new_contents = update_copyright_year(old_contents, datetime.date.today().year)
         if old_contents == new_contents:
             return []
-        with open(filename, "w", encoding="utf8") as f:
-            f.write(new_contents)
-        self.git.add("LICENSE")
+        with open(filename, "w", encoding="utf8") as file:
+            file.write(new_contents)
+        self.context.git.add("LICENSE")
         msg = "chore: Updated copyright year in LICENSE"
-        self.git.commit(msg)
+        self.context.git.commit(msg)
         return [msg]
 
 
@@ -96,14 +89,9 @@ class MustHaveLicenseFix(MissingFileFix):
     Does not run for forks, private repos, and local git repos.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs
-    ):
-        super().__init__(git, "LICENSE")
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, "LICENSE")
+        self.repo = context.repo
 
     def should_process_repo(self):
         return self.repo and not self.repo.private and not self.repo.fork

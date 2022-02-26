@@ -191,3 +191,25 @@ def test_is_remote_branch_absent(mocker: MockerFixture):
         stdout=subprocess.PIPE,
     )
     assert not result
+
+
+def test_get_remote_url(mocker: MockerFixture):
+    # arrange
+    result_type = collections.namedtuple("ProcessResult", ["stdout"])
+    result = result_type("git@github.com:ngeor/instarepo.git\n")
+    mock = mocker.patch("subprocess.run")
+    mock.return_value = result
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+
+    # act
+    result = git.get_remote_url()
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "remote", "get-url", "origin"],
+        check=True,
+        cwd="/tmp/hello",
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    assert result == "git@github.com:ngeor/instarepo.git"

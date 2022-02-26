@@ -81,8 +81,8 @@ def next_month(dt):
 
 
 def count_files(path, visitor, result):
-    with os.scandir(path) as it:
-        for entry in it:
+    with os.scandir(path) as iterator:
+        for entry in iterator:
             if entry.is_file():
                 result = visitor(result, path, entry.name)
             elif entry.is_dir() and not entry.name.startswith("."):
@@ -94,10 +94,10 @@ def file_counter(result, path, name):
     return result + 1
 
 
-def loc(file):
+def loc(filename):
     try:
-        with open(file, "r", 1, "utf-8") as f:
-            return len(f.readlines())
+        with open(filename, "r", encoding="utf-8") as file:
+            return len(file.readlines())
     except:
         return 0
 

@@ -7,8 +7,8 @@ from .ci import remove_travis_badge
 
 def test_badge():
     """Tests removing the Travis badge"""
-    x = "[![Build Status](https://travis-ci.org/ngeor/games.svg?branch=master)](https://travis-ci.org/ngeor/games)"
-    assert remove_travis_badge(x) == ""
+    contents = "[![Build Status](https://travis-ci.org/ngeor/games.svg?branch=master)](https://travis-ci.org/ngeor/games)"
+    assert remove_travis_badge(contents) == ""
 
-    x = "hi"
-    assert remove_travis_badge(x) == x
+    contents = "hi"
+    assert remove_travis_badge(contents) == contents

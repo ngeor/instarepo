@@ -1,8 +1,9 @@
 import logging
 import os.path
 import re
-from typing import List, Optional
+from typing import List
 
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 
@@ -20,16 +21,10 @@ class RepoDescriptionFix:
     Does not run for local git repositories.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        github: Optional[instarepo.github.GitHub],
-        repo: Optional[instarepo.github.Repo],
-        **kwargs
-    ):
-        self.github = github
-        self.git = git
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.github = context.github
+        self.git = context.git
+        self.repo = context.repo
 
     def run(self):
         readme_description = self.get_readme_description()
@@ -49,9 +44,9 @@ class RepoDescriptionFix:
         filename = os.path.join(self.git.dir, "README.md")
         if not os.path.isfile(filename):
             return None
-        with open(filename) as f:
+        with open(filename, "r", encoding="utf-8") as file:
             # read lines
-            lines = f.readlines()
+            lines = file.readlines()
             # trim
             lines = [line.strip() for line in lines]
             # keep the ones that start with a letter

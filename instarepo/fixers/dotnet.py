@@ -3,8 +3,9 @@ import logging
 import os
 import os.path
 import xml.etree.ElementTree as ET
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 import instarepo.xml_utils
@@ -15,14 +16,14 @@ from .finders import is_file_of_extension
 class DotNetFrameworkVersionFix:
     """Sets the .NET Framework version to 4.7.2 in csproj and web.config files"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        self.git = git
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
         self.result = []
 
     def run(self):
         # ensure abspath so that dirpath in the loop is also absolute
         self.result = []
-        with os.scandir(self.git.dir) as iterator:
+        with os.scandir(self.context.git.dir) as iterator:
             for entry in iterator:
                 if is_file_of_extension(entry, ".sln"):
                     self.process_sln(entry.path)
@@ -31,10 +32,10 @@ class DotNetFrameworkVersionFix:
     def process_sln(self, sln_path: str):
         for relative_csproj in get_projects_from_sln_file(sln_path):
             parts = relative_csproj.replace("\\", "/").split("/")
-            abs_csproj = os.path.join(self.git.dir, *parts)
+            abs_csproj = os.path.join(self.context.git.dir, *parts)
             self.process_csproj(abs_csproj)
             directory_parts = parts[0:-1]
-            csproj_dir = os.path.join(self.git.dir, *directory_parts)
+            csproj_dir = os.path.join(self.context.git.dir, *directory_parts)
             self.process_web_configs(csproj_dir)
 
     def process_web_configs(self, csproj_dir: str):
@@ -66,10 +67,10 @@ class DotNetFrameworkVersionFix:
             ET.register_namespace(
                 "msbuild", "http://schemas.microsoft.com/developer/msbuild/2003"
             )
-        relpath = os.path.relpath(filename, self.git.dir)
-        self.git.add(relpath)
+        relpath = os.path.relpath(filename, self.context.git.dir)
+        self.context.git.add(relpath)
         msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
-        self.git.commit(msg)
+        self.context.git.commit(msg)
         self.result.append(msg)
 
     def process_web_config(self, filename: str):
@@ -89,10 +90,10 @@ class DotNetFrameworkVersionFix:
             xml_declaration=True,
             encoding="utf-8",
         )
-        relpath = os.path.relpath(filename, self.git.dir)
-        self.git.add(relpath)
+        relpath = os.path.relpath(filename, self.context.git.dir)
+        self.context.git.add(relpath)
         msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
-        self.git.commit(msg)
+        self.context.git.commit(msg)
         self.result.append(msg)
 
 
@@ -102,27 +103,21 @@ class MustHaveGitHubActionFix:
     Does not work for locally checked out repositories.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs,
-    ):
-        self.git = git
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
 
     def run(self):
         if not self._should_process_repo():
             return []
 
-        if not self.repo:
+        if not self.context.repo:
             return []
 
-        expected_contents = get_workflow_contents(self.repo)
+        expected_contents = get_workflow_contents(self.context.repo)
         dir_name = ".github/workflows"
-        ensure_directories(self.git, dir_name)
+        ensure_directories(self.context.git, dir_name)
         file_name = dir_name + "/build.yml"
-        absolute_file_name = self.git.join(file_name)
+        absolute_file_name = self.context.git.join(file_name)
         if os.path.isfile(absolute_file_name):
             with open(absolute_file_name, "r", encoding="utf-8") as file:
                 old_contents = file.read()
@@ -131,17 +126,17 @@ class MustHaveGitHubActionFix:
         if expected_contents != old_contents:
             with open(absolute_file_name, "w", encoding="utf-8") as file:
                 file.write(expected_contents)
-            self.git.add(file_name)
+            self.context.git.add(file_name)
             if old_contents:
                 msg = "chore: Updated GitHub Actions workflow for .NET project"
             else:
                 msg = "chore: Added GitHub Actions workflow for .NET project"
             self._rm_appveyor()
-            self.git.commit(msg)
+            self.context.git.commit(msg)
             return [msg]
         if self._rm_appveyor():
             msg = "chore: Removed appveyor.yml from .NET project"
-            self.git.commit(msg)
+            self.context.git.commit(msg)
             return [msg]
         return []
 
@@ -152,7 +147,7 @@ class MustHaveGitHubActionFix:
         at the root directory which references at least one csproj file.
         """
         sln_path = ""
-        with os.scandir(self.git.dir) as iterator:
+        with os.scandir(self.context.git.dir) as iterator:
             for entry in iterator:
                 if is_file_of_extension(entry, ".sln"):
                     if sln_path:
@@ -165,8 +160,8 @@ class MustHaveGitHubActionFix:
         return len(get_projects_from_sln_file(sln_path)) > 0
 
     def _rm_appveyor(self):
-        if self.git.isfile("appveyor.yml"):
-            self.git.rm("appveyor.yml")
+        if self.context.git.isfile("appveyor.yml"):
+            self.context.git.rm("appveyor.yml")
             return True
         return False
 

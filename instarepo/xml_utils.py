@@ -20,9 +20,9 @@ def find_at_tree(tree: ET.ElementTree, *args):
 
 
 def find(node: Optional[ET.Element], *args) -> Optional[ET.Element]:
-    p = node
+    current_node = node
     for arg in args:
-        if p is None:
+        if current_node is None:
             return None
-        p = p.find(arg)
-    return p
+        current_node = current_node.find(arg)
+    return current_node

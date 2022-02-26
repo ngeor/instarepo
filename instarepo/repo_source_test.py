@@ -60,4 +60,4 @@ def test_parse_timedelta():
     assert parse_timedelta("4h") == timedelta(hours=4)
     assert parse_timedelta("15m") == timedelta(minutes=15)
     assert parse_timedelta("3d") == timedelta(days=3)
-    assert parse_timedelta(None) == None
+    assert parse_timedelta(None) is None

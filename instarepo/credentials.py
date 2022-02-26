@@ -53,14 +53,14 @@ if os.name == "nt":
 
 class DotFileCredentials:
     def __init__(self):
-        self.file = os.path.join(pathlib.Path.home(), ".instarepo.ini")
+        self.filename = os.path.join(pathlib.Path.home(), ".instarepo.ini")
 
     def load(self):
         username = ""
         token = ""
-        if os.path.isfile(self.file):
+        if os.path.isfile(self.filename):
             config = configparser.ConfigParser()
-            config.read(self.file)
+            config.read(self.filename, encoding="utf-8")
             if "DEFAULT" in config:
                 default_section = config["DEFAULT"]
                 username = default_section.get("username", "")
@@ -73,12 +73,12 @@ class DotFileCredentials:
             "username": credentials.username,
             "token": credentials.token,
         }
-        with open(self.file, "w") as file:
+        with open(self.filename, "w", encoding="utf-8") as file:
             config.write(file)
 
     def clear(self):
-        if os.path.isfile(self.file):
-            os.remove(self.file)
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
 
 
 class PlatformCredentials:

@@ -1,105 +1,20 @@
 """Fixes for Maven projects"""
-import logging
 import os
 import os.path
 import platform
-import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
-from typing import Optional
 
 import requests
 
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 import instarepo.xml_utils
 from instarepo.fixers.base import MissingFileFix
 from .finders import is_maven_project
 from .readme import locate_badges, merge_badges
-
-
-LOG_LEVEL = re.compile(r"^\[[A-Z]+\]")
-
-
-def filter_maven_output(output: str) -> str:
-    lines = output.splitlines()
-    modified_lines = (strip_log_level(line) for line in lines)
-    filtered_lines = (line for line in modified_lines if filter_line(line))
-    return os.linesep.join(filtered_lines)
-
-
-def strip_log_level(line: str) -> str:
-    line = LOG_LEVEL.sub("", line)
-    line = line.strip()
-    return line
-
-
-def filter_line(line: str) -> bool:
-    if not line:
-        return False
-    allow_prefixes = ["Updated ", "Updating "]
-    for allow_prefix in allow_prefixes:
-        if line.startswith(allow_prefix):
-            return True
-    return False
-
-
-def get_latest_artifact_version(group_id: str, artifact_id: str) -> Optional[str]:
-    """
-    Gets the latest published artifact version from central maven.
-
-    Example url: https://repo1.maven.org/maven2/com/github/ngeor/archetype-quickstart-jdk8/maven-metadata.xml
-
-    File structure:
-
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <metadata>
-        <groupId>com.github.ngeor</groupId>
-        <artifactId>archetype-quickstart-jdk8</artifactId>
-        <versioning>
-            <latest>2.8.0</latest>
-            <release>2.8.0</release>
-            <versions>
-                <version>1.0.14</version>
-                <version>1.0.22</version>
-                <version>1.0.27</version>
-                <version>1.0.29</version>
-                <version>1.1.0</version>
-                <version>1.1.1</version>
-                <version>1.1.2</version>
-                <version>1.2.0</version>
-                <version>1.3.0</version>
-                <version>1.4.0</version>
-                <version>2.0.0</version>
-                <version>2.1.0</version>
-                <version>2.2.0</version>
-                <version>2.3.0</version>
-                <version>2.4.0</version>
-                <version>2.5.0</version>
-                <version>2.8.0</version>
-            </versions>
-            <lastUpdated>20210925070507</lastUpdated>
-        </versioning>
-    </metadata>
-    ```
-    """
-    group_path = group_id.replace(".", "/")
-    url = (
-        f"https://repo1.maven.org/maven2/{group_path}/{artifact_id}/maven-metadata.xml"
-    )
-    response = requests.get(url)
-    response.raise_for_status()
-    root = ET.fromstring(response.text)
-    versioning = root.find("versioning")
-    if versioning is not None:
-        release = versioning.find("release")
-        if release is not None:
-            return release.text
-
-    logging.warning("URL %s returned unexpected XML", url)
-    return None
 
 
 MAVEN_YML = """# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
@@ -134,8 +49,8 @@ jobs:
 class MustHaveMavenGitHubWorkflowFix(MissingFileFix):
     """If missing, adds a GitHub action Maven build workflow"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, ".github/workflows/maven.yml")
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, ".github/workflows/maven.yml")
 
     def should_process_repo(self):
         return is_maven_project(self.git.dir)
@@ -151,29 +66,23 @@ class MavenBadgesFix:
     Does not work for local git repositories.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs,
-    ):
-        self.git = git
-        self.repo = repo
-        self.maven = Maven(git.dir)
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
+        self.maven = Maven(context.git.dir)
 
     def run(self):
-        if not self.git.isfile("README.md"):
+        if not self.context.git.isfile("README.md"):
             return []
-        if not self.git.isfile("pom.xml"):
+        if not self.context.git.isfile("pom.xml"):
             return []
-        if not self.repo:
+        if not self.context.repo:
             return []
-        badges = self._badges_dict(self.repo)
+        badges = self._badges_dict(self.context.repo)
 
         if not badges:
             return []
 
-        with open(self.git.join("README.md"), "r", encoding="utf-8") as file:
+        with open(self.context.git.join("README.md"), "r", encoding="utf-8") as file:
             before_badges, existing_badges, after_badges = locate_badges(file.read())
             has_changes = False
             for i in range(len(existing_badges)):
@@ -192,11 +101,11 @@ class MavenBadgesFix:
                 has_changes = True
         if not has_changes:
             return []
-        with open(self.git.join("README.md"), "w", encoding="utf-8") as file:
+        with open(self.context.git.join("README.md"), "w", encoding="utf-8") as file:
             file.write(merge_badges(before_badges, existing_badges, after_badges))
-        self.git.add("README.md")
+        self.context.git.add("README.md")
         msg = "Updated Maven badges in README.md"
-        self.git.commit(msg)
+        self.context.git.commit(msg)
         return [msg]
 
     def _badges_dict(self, repo: instarepo.github.Repo):
@@ -206,7 +115,7 @@ class MavenBadgesFix:
         return badges
 
     def _github_actions_badge(self, repo: instarepo.github.Repo):
-        if self.git.isfile(".github", "workflows", "maven.yml"):
+        if self.context.git.isfile(".github", "workflows", "maven.yml"):
             needle = "actions/workflows"
             markdown = f"[![Java CI with Maven](https://github.com/{repo.full_name}/actions/workflows/maven.yml/badge.svg)](https://github.com/{repo.full_name}/actions/workflows/maven.yml)"
             return {needle: markdown}
@@ -222,7 +131,7 @@ class MavenBadgesFix:
             badges.update(maven_central_badge(root))
             # edge case for checkstyle-rules artifact which has to publish
             # javadoc but doesn't have any source code
-            if self.git.isdir("src", "main", "java"):
+            if self.context.git.isdir("src", "main", "java"):
                 badges.update(javadoc_badge(root))
         return badges
 
@@ -308,6 +217,7 @@ class Maven:
         """
         self.directory = directory
 
+    # pylint: disable=subprocess-run-check
     def run(self, *args) -> str:
         """
         Runs Maven commands.
@@ -340,27 +250,21 @@ class UrlFix:
     Does not work for local git repositories.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs,
-    ):
-        self.git = git
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
 
     def run(self):
-        if not self.git.isfile("pom.xml") or not self.repo:
+        if not self.context.git.isfile("pom.xml") or not self.context.repo:
             return []
         try:
             ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
-            return self.do_run(self.repo)
+            return self.do_run(self.context.repo)
         finally:
             ET.register_namespace("maven", "http://maven.apache.org/POM/4.0.0")
 
     def do_run(self, repo: instarepo.github.Repo):
         has_changes = False
-        tree = instarepo.xml_utils.parse(self.git.join("pom.xml"))
+        tree = instarepo.xml_utils.parse(self.context.git.join("pom.xml"))
         root = tree.getroot()
         has_changes |= ensure_element(
             root, "{http://maven.apache.org/POM/4.0.0}url", repo.html_url
@@ -387,11 +291,11 @@ class UrlFix:
             scm, "{http://maven.apache.org/POM/4.0.0}url", repo.html_url
         )
         if has_changes:
-            tree.write(self.git.join("pom.xml"))
-            Maven(self.git.dir).sort_pom()
-            self.git.add("pom.xml")
+            tree.write(self.context.git.join("pom.xml"))
+            Maven(self.context.git.dir).sort_pom()
+            self.context.git.add("pom.xml")
             msg = "Corrected url info in pom.xml"
-            self.git.commit(msg)
+            self.context.git.commit(msg)
             return [msg]
 
         return []
