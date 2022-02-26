@@ -160,43 +160,38 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN]
-                     [--sort {full_name,created,updated,pushed}]
+usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN] [--sort {full_name,created,updated,pushed}]
                      [--direction {asc,desc}]
                      [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
                      [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
                      [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
                      [--pushed-before PUSHED_BEFORE] [--dry-run]
-                     [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
-                     --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]]
-                     [--local-dir LOCAL_DIR] [--auto-merge]
+                     [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] | --except-fixers EXCEPT_FIXERS
+                     [EXCEPT_FIXERS ...]] [--local-dir LOCAL_DIR] [--auto-merge] [-c CONFIG_FILE]
 
 Runs automatic fixes on the repositories
 
 optional arguments:
   -h, --help            show this help message and exit
   --only-language ONLY_LANGUAGE
-                        Only process repositories of the given programming
-                        language
+                        Only process repositories of the given programming language
   --except-language EXCEPT_LANGUAGE
-                        Do not process repositories of the given programming
-                        language
+                        Do not process repositories of the given programming language
   --only-name-prefix ONLY_NAME_PREFIX
-                        Only process repositories whose name starts with the
-                        given prefix
+                        Only process repositories whose name starts with the given prefix
   --except-name-prefix EXCEPT_NAME_PREFIX
-                        Do not process repositories whose name starts with the
-                        given prefix
+                        Do not process repositories whose name starts with the given prefix
   --dry-run             Do not actually push and create MR
   --only-fixers ONLY_FIXERS [ONLY_FIXERS ...]
                         Only run fixers that have the given prefixes
   --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]
                         Do not run fixers that have the given prefixes
   --local-dir LOCAL_DIR
-                        Apply fixes for a project at a local working
-                        directory. Skips all GitHub related calls and git
-                        push.
+                        Apply fixes for a project at a local working directory. Skips all GitHub
+                        related calls and git push.
   --auto-merge          Automatically merge open MRs that pass CI.
+  -c CONFIG_FILE, --config-file CONFIG_FILE
+                        The location of an optional configuration file
 
 Authentication:
   -u USERNAME, --username USERNAME
@@ -212,11 +207,11 @@ Filtering:
   --forks {allow,deny,only}
                         Filter forks
   --pushed-after PUSHED_AFTER
-                        Only process repositories that had changes pushed
-                        after the given time interval e.g. 4h
+                        Only process repositories that had changes pushed after the given time
+                        interval e.g. 4h
   --pushed-before PUSHED_BEFORE
-                        Only process repositories that had changes pushed
-                        before the given time interval e.g. 4h
+                        Only process repositories that had changes pushed before the given time
+                        interval e.g. 4h
 
 Example:
     instarepo fix -u USER -t TOKEN
@@ -263,14 +258,19 @@ maven.url
     Does not work for local git repositories.
 
 missing_files.must_have_readme
-    Ensures that the repo has a readme file
+
+    Ensures that the repo has a readme file.
+
+    Does not run for locally checked out repositories.
+
 missing_files.must_have_editor_config
     Ensures an editorconfig file exists
 missing_files.must_have_git_hub_funding
 
     Ensures a GitHub funding file exists (.github/FUNDING.yml).
-    The rule will use the FUNDING.yml file from `user-templates/.github/FUNDING.yml`,
-    if one exists.
+    The template file needs to be configured in the configuration file.
+
+    Does not run for locally checked out repositories.
 
 missing_files.must_have_git_ignore
     Ensures a .gitignore file exists
