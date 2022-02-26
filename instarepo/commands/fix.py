@@ -13,6 +13,7 @@ import instarepo.fixers.base
 import instarepo.fixers.changelog
 import instarepo.fixers.ci
 import instarepo.fixers.config
+import instarepo.fixers.context
 import instarepo.fixers.dotnet
 import instarepo.fixers.license
 import instarepo.fixers.maven
@@ -269,12 +270,13 @@ def create_composite_fixer(
     github: Optional[instarepo.github.GitHub] = None,
     verbose: bool = False,
 ):
+    context = instarepo.fixers.context.Context(
+        git=git, config=config, repo=repo, github=github, verbose=verbose
+    )
     return instarepo.fixers.base.CompositeFix(
         list(
             map(
-                lambda fixer_class: fixer_class(
-                    git=git, repo=repo, github=github, config=config, verbose=verbose
-                ),
+                lambda fixer_class: fixer_class(context),
                 fixer_classes,
             )
         )

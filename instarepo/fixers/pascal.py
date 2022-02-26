@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 import subprocess
+import instarepo.fixers.context
 import instarepo.git
 
 JCF_EXE = "C:\\opt\\jcf_243_exe\\JCF.exe"
@@ -41,11 +42,11 @@ def is_pascal_entry(entry):
 class AutoFormatFix:
     """Automatically formats Pascal files with JEDI code format"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, verbose: bool, **kwargs):
-        self.git = git
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.git = context.git
         self.files = []
         self._fallback_ptop_cfg = None
-        self.verbose = verbose
+        self.verbose = context.verbose
 
     def run(self):
         if not os.path.isfile(JCF_EXE):

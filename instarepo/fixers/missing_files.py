@@ -1,4 +1,5 @@
 import requests
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
@@ -8,19 +9,24 @@ from typing import Optional
 
 
 class MustHaveReadmeFix(MissingFileFix):
-    """Ensures that the repo has a readme file"""
+    """
+    Ensures that the repo has a readme file.
 
-    def __init__(
-        self, git: instarepo.git.GitWorkingDir, repo: instarepo.github.Repo, **kwargs
-    ):
-        super().__init__(git, "README.md")
-        self.repo = repo
+    Does not run for locally checked out repositories.
+    """
+
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, "README.md")
+        self.repo = context.repo
 
     def get_contents(self):
         contents = f"# {self.repo.name}\n"
         if self.repo.description:
             contents = contents + "\n" + self.repo.description + "\n"
         return contents
+
+    def should_process_repo(self) -> bool:
+        return self.repo is not None
 
 
 EDITOR_CONFIG = """# Editor configuration, see https://editorconfig.org
@@ -42,8 +48,8 @@ end_of_line = lf
 class MustHaveEditorConfigFix(MissingFileFix):
     """Ensures an editorconfig file exists"""
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, ".editorconfig")
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, ".editorconfig")
 
     def get_contents(self):
         return EDITOR_CONFIG
@@ -55,20 +61,13 @@ class MustHaveGitHubFundingFix(MissingFileFix):
     The template file needs to be configured in the configuration file.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        config: Config,
-        repo: Optional[
-            instarepo.github.Repo
-        ],  # TODO figure out repo name for local directory
-        **kwargs,
-    ):
-        super().__init__(git, ".github/FUNDING.yml")
-        if repo:
-            self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, ".github/FUNDING.yml")
+        if context.repo:
+            self.repo = context.repo
             self.contents = ""
-            template = config.get_setting(repo.full_name, "funding_yml")
+            # TODO figure out repo name for local directory
+            template = context.config.get_setting(self.repo.full_name, "funding_yml")
             if template:
                 with open(template, "r", encoding="utf-8") as file:
                     self.contents = file.read()
@@ -101,8 +100,8 @@ backup/
 *.vbw
 """
 
-    def __init__(self, git: instarepo.git.GitWorkingDir, **kwargs):
-        super().__init__(git, ".gitignore")
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, ".gitignore")
 
     def get_contents(self):
         if is_maven_project(self.git.dir):

@@ -4,6 +4,7 @@ import re
 
 from typing import Optional
 
+import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
@@ -37,19 +38,13 @@ class CopyrightYearFix:
     Does not run for forks, private repos, and local git repos.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs
-    ):
-        self.git = git
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        self.context = context
 
     def run(self):
-        if not self.repo or self.repo.private or self.repo.fork:
+        if not self.context.repo or self.context.repo.private or self.context.repo.fork:
             return []
-        filename = os.path.join(self.git.dir, "LICENSE")
+        filename = self.context.git.join("LICENSE")
         if not os.path.isfile(filename):
             return []
         with open(filename, "r", encoding="utf-8") as f:
@@ -59,9 +54,9 @@ class CopyrightYearFix:
             return []
         with open(filename, "w", encoding="utf8") as f:
             f.write(new_contents)
-        self.git.add("LICENSE")
+        self.context.git.add("LICENSE")
         msg = "chore: Updated copyright year in LICENSE"
-        self.git.commit(msg)
+        self.context.git.commit(msg)
         return [msg]
 
 
@@ -96,14 +91,9 @@ class MustHaveLicenseFix(MissingFileFix):
     Does not run for forks, private repos, and local git repos.
     """
 
-    def __init__(
-        self,
-        git: instarepo.git.GitWorkingDir,
-        repo: Optional[instarepo.github.Repo],
-        **kwargs
-    ):
-        super().__init__(git, "LICENSE")
-        self.repo = repo
+    def __init__(self, context: instarepo.fixers.context.Context):
+        super().__init__(context.git, "LICENSE")
+        self.repo = context.repo
 
     def should_process_repo(self):
         return self.repo and not self.repo.private and not self.repo.fork

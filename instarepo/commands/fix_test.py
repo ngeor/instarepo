@@ -7,6 +7,7 @@ import pytest
 import instarepo.fixers.base
 import instarepo.fixers.changelog
 import instarepo.fixers.config
+import instarepo.fixers.context
 import instarepo.fixers.dotnet
 import instarepo.fixers.maven
 import instarepo.git
@@ -89,11 +90,13 @@ def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
     repo_type = collections.namedtuple("Repo", ["full_name"])
     mock_repo = repo_type("ngeor/test")
     instance = fixer_class(
-        git=mock_git,
-        config=mock_config,
-        repo=mock_repo,
-        github=mock_github,
-        verbose=False,
+        instarepo.fixers.context.Context(
+            git=mock_git,
+            config=mock_config,
+            repo=mock_repo,
+            github=mock_github,
+            verbose=False,
+        )
     )
     assert instance
 
@@ -105,7 +108,9 @@ def test_can_create_fixer_for_local_dir(
     mock_git = instarepo.git.GitWorkingDir("/tmp")
     mock_config = instarepo.fixers.config.PartialConfig({})
     instance = fixer_class(
-        git=mock_git, config=mock_config, repo=None, github=None, verbose=False
+        instarepo.fixers.context.Context(
+            git=mock_git, config=mock_config, repo=None, github=None, verbose=False
+        )
     )
     assert instance
 

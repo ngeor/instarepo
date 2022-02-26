@@ -6,6 +6,7 @@ import os.path
 import re
 from typing import List, Tuple
 
+import instarepo.fixers.context
 import instarepo.git
 from .base import SingleFileFix
 
@@ -22,11 +23,9 @@ class ReadmeImageFix(SingleFileFix):
     folders up but the user forgot to update them in the `README.md` file.
     """
 
-    def __init__(
-        self, git: instarepo.git.GitWorkingDir, **kwargs
-    ):  # pylint: disable=unused-argument
+    def __init__(self, context: instarepo.fixers.context.Context):
         """Creates an instance of this class"""
-        super().__init__(git, "README.md", "fix: Fixed broken images in README")
+        super().__init__(context.git, "README.md", "fix: Fixed broken images in README")
 
     def convert(self, contents: str) -> str:
         return RE_MARKDOWN_IMAGE.sub(self.image_convert, contents)
