@@ -51,12 +51,13 @@ class MustHaveMavenGitHubWorkflowFix(MissingFileFix):
 
     def __init__(self, context: instarepo.fixers.context.Context):
         super().__init__(context.git, ".github/workflows/maven.yml")
+        self.context = context
 
     def should_process_repo(self):
         return is_maven_project(self.git.dir)
 
     def get_contents(self):
-        return MAVEN_YML
+        return MAVEN_YML.replace("trunk", self.context.default_branch())
 
 
 class MavenBadgesFix:

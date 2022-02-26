@@ -213,3 +213,25 @@ def test_get_remote_url(mocker: MockerFixture):
         stdout=subprocess.PIPE,
     )
     assert result == "git@github.com:ngeor/instarepo.git"
+
+
+def test_get_default_branch(mocker: MockerFixture):
+    # arrange
+    result_type = collections.namedtuple("ProcessResult", ["stdout"])
+    result = result_type("refs/remotes/origin/trunk\n")
+    mock = mocker.patch("subprocess.run")
+    mock.return_value = result
+    git = instarepo.git.GitWorkingDir("/tmp/hello")
+
+    # act
+    result = git.get_default_branch()
+
+    # assert
+    mock.assert_called_once_with(
+        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+        check=True,
+        cwd="/tmp/hello",
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    assert result == "trunk"

@@ -100,7 +100,6 @@ class DotNetFrameworkVersionFix:
 class MustHaveGitHubActionFix:
     """
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
-    Does not work for locally checked out repositories.
     """
 
     def __init__(self, context: instarepo.fixers.context.Context):
@@ -110,10 +109,7 @@ class MustHaveGitHubActionFix:
         if not self._should_process_repo():
             return []
 
-        if not self.context.repo:
-            return []
-
-        expected_contents = get_workflow_contents(self.context.repo)
+        expected_contents = get_workflow_contents(self.context.default_branch())
         dir_name = ".github/workflows"
         ensure_directories(self.context.git, dir_name)
         file_name = dir_name + "/build.yml"
@@ -166,7 +162,7 @@ class MustHaveGitHubActionFix:
         return False
 
 
-def get_workflow_contents(repo: instarepo.github.Repo):
+def get_workflow_contents(default_branch: str):
     return """name: CI
 
 on:
@@ -187,7 +183,7 @@ jobs:
     - run: dotnet build
     - run: dotnet test -v normal
 """.replace(
-        "trunk", repo.default_branch
+        "trunk", default_branch
     )
 
 

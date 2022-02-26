@@ -187,6 +187,20 @@ class GitWorkingDir:
         )
         return result.stdout.strip()
 
+    def get_default_branch(self):
+        # git symbolic-ref refs/remotes/origin/HEAD -> refs/remotes/origin/trunk
+        prefix = "refs/remotes/origin/"
+        ref = prefix + "HEAD"
+        result = subprocess.run(
+            ["git", "symbolic-ref", ref],
+            check=True,
+            cwd=self.dir,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+        )
+        output = result.stdout.strip()
+        return output[len(prefix) :]
+
 
 def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:
     args = ["git", "clone"]

@@ -4,7 +4,7 @@ or remote on GitHub.
 """
 import logging
 import tempfile
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 import instarepo.git
 import instarepo.github
@@ -243,7 +243,8 @@ class FixRemote(FixBase):
         mergeable_state = details["mergeable_state"]
         if mergeable_state != "clean":
             logging.debug(
-                f"Cannot merge MR because the mergeable state is not clean but {mergeable_state}"
+                "Cannot merge MR because the mergeable state is not clean but %s",
+                mergeable_state,
             )
             return False
         head_sha = merge_request["head"]["sha"]
@@ -351,13 +352,13 @@ def _pascal_case_to_underscore_case(value: str) -> str:
     into a lower case underscore separated string (e.g. my_class).
     """
     result = ""
-    for ch in value:
-        if "A" <= ch <= "Z":
+    for char in value:
+        if "A" <= char <= "Z":
             if result:
                 result += "_"
-            result += ch.lower()
+            result += char.lower()
         else:
-            result += ch
+            result += char
     return result
 
 

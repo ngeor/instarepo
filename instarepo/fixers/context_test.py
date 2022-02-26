@@ -23,3 +23,18 @@ def test_full_name_from_git_remote(mocker: MockerFixture):
     config = PartialConfig({})
     context = Context(git, config, repo=None, github=None, verbose=False)
     assert context.full_name() == "foo/bar"
+
+
+def test_default_branch_from_repo():
+    repo_type = collections.namedtuple("Repo", "default_branch")
+    repo = repo_type("main")
+    context = Context(None, None, repo=repo)
+    assert context.default_branch() == "main"
+
+
+def test_default_branch_from_git(mocker: MockerFixture):
+    git = GitWorkingDir("/tmp")
+    mock = mocker.patch.object(git, "get_default_branch")
+    mock.return_value = "trunk"
+    context = Context(git, None)
+    assert context.default_branch() == "trunk"

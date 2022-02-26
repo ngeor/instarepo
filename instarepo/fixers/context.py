@@ -49,3 +49,9 @@ class Context:
 
     def get_setting(self, key: str):
         return self.config.get_setting(self.full_name(), key)
+
+    @functools.lru_cache()
+    def default_branch(self):
+        if self.repo:
+            return self.repo.default_branch
+        return self.git.get_default_branch()

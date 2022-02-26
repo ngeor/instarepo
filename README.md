@@ -229,7 +229,6 @@ dotnet.dot_net_framework_version
 dotnet.must_have_git_hub_action
 
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
-    Does not work for locally checked out repositories.
 
 license.copyright_year
 
