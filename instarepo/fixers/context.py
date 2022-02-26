@@ -1,8 +1,8 @@
 import functools
+from typing import Optional
 import instarepo.git
 import instarepo.github
 import instarepo.fixers.config
-from typing import Optional
 
 
 class Context:

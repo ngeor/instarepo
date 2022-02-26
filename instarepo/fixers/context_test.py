@@ -1,10 +1,10 @@
 """Unit tests for the context module"""
 
 import collections
+from pytest_mock import MockerFixture
 from .config import PartialConfig
 from .context import Context
 from ..git import GitWorkingDir
-from pytest_mock import MockerFixture
 
 
 def test_full_name_from_repo():

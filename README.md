@@ -411,6 +411,7 @@ Filtering:
 
 - Files are formatted with `black`
 - Unit tests with `pytest`
+- Lint with `pylint --disable=R,C0116,C0114,C0115,C0301 instarepo`
 
 ### Creating a new release
 

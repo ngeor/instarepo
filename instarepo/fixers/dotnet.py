@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 import xml.etree.ElementTree as ET
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 import instarepo.fixers.context
 import instarepo.git

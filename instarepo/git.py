@@ -47,6 +47,7 @@ class GitWorkingDir:
     def add(self, file: str) -> None:
         subprocess.run(["git", "add", file], check=True, cwd=self.dir)
 
+    # pylint: disable=invalid-name
     def rm(self, file: str) -> None:
         subprocess.run(["git", "rm", file], check=True, cwd=self.dir)
 
@@ -157,7 +158,7 @@ class GitWorkingDir:
     def is_remote_branch_present(self, branch: str, remote="origin"):
         remote_branch_sha = ""
         try:
-            remote_branch_sha = self.rev_parse(f"remotes/origin/{branch}")
+            remote_branch_sha = self.rev_parse(f"remotes/{remote}/{branch}")
         except:  # pylint: disable=bare-except
             pass
         return len(remote_branch_sha) > 0

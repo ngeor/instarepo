@@ -5,7 +5,6 @@ import platform
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
-from typing import Optional
 
 import requests
 
@@ -218,6 +217,7 @@ class Maven:
         """
         self.directory = directory
 
+    # pylint: disable=subprocess-run-check
     def run(self, *args) -> str:
         """
         Runs Maven commands.

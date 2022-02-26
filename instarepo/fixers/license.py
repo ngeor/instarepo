@@ -2,33 +2,31 @@ import datetime
 import os.path
 import re
 
-from typing import Optional
-
 import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
 
 
-def _repl(m: re.Match, year: int) -> str:
-    is_year_range = m.group(4)
+def _repl(match: re.Match, year: int) -> str:
+    is_year_range = match.group(4)
     if is_year_range:
-        is_same_year = str(year) == m.group(4)
+        is_same_year = str(year) == match.group(4)
         if is_same_year:
-            return m.group(0)
+            return match.group(0)
         else:
-            return m.group(1) + m.group(2) + "-" + str(year)
+            return match.group(1) + match.group(2) + "-" + str(year)
     else:
-        is_same_year = str(year) == m.group(2)
+        is_same_year = str(year) == match.group(2)
         if is_same_year:
-            return m.group(0)
+            return match.group(0)
         else:
-            return m.group(0) + "-" + str(year)
+            return match.group(0) + "-" + str(year)
 
 
 def update_copyright_year(contents: str, year: int) -> str:
-    x = re.compile(r"^(Copyright \(c\) )([0-9]{4})(-([0-9]{4}))?", re.M)
-    return x.sub(lambda m: _repl(m, year), contents)
+    copyright_regex = re.compile(r"^(Copyright \(c\) )([0-9]{4})(-([0-9]{4}))?", re.M)
+    return copyright_regex.sub(lambda m: _repl(m, year), contents)
 
 
 class CopyrightYearFix:
@@ -47,13 +45,13 @@ class CopyrightYearFix:
         filename = self.context.git.join("LICENSE")
         if not os.path.isfile(filename):
             return []
-        with open(filename, "r", encoding="utf-8") as f:
-            old_contents = f.read()
+        with open(filename, "r", encoding="utf-8") as file:
+            old_contents = file.read()
         new_contents = update_copyright_year(old_contents, datetime.date.today().year)
         if old_contents == new_contents:
             return []
-        with open(filename, "w", encoding="utf8") as f:
-            f.write(new_contents)
+        with open(filename, "w", encoding="utf8") as file:
+            file.write(new_contents)
         self.context.git.add("LICENSE")
         msg = "chore: Updated copyright year in LICENSE"
         self.context.git.commit(msg)

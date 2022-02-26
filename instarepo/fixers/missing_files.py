@@ -3,9 +3,7 @@ import instarepo.fixers.context
 import instarepo.git
 import instarepo.github
 from instarepo.fixers.base import MissingFileFix
-from instarepo.fixers.config import Config
 from .finders import is_lazarus_project, is_maven_project, is_vb6_project
-from typing import Optional
 
 
 class MustHaveReadmeFix(MissingFileFix):
@@ -69,9 +67,9 @@ class MustHaveGitHubFundingFix(MissingFileFix):
 
     def should_process_repo(self):
         return (
-            self.repo
-            and not self.repo.private
-            and not self.repo.fork
+            self.context.repo
+            and not self.context.repo.private
+            and not self.context.repo.fork
             and self._get_template_filename()
         )
 

@@ -1,7 +1,7 @@
 import logging
 import os.path
 import re
-from typing import List, Optional
+from typing import List
 
 import instarepo.fixers.context
 import instarepo.git
@@ -44,9 +44,9 @@ class RepoDescriptionFix:
         filename = os.path.join(self.git.dir, "README.md")
         if not os.path.isfile(filename):
             return None
-        with open(filename) as f:
+        with open(filename, "r", encoding="utf-8") as file:
             # read lines
-            lines = f.readlines()
+            lines = file.readlines()
             # trim
             lines = [line.strip() for line in lines]
             # keep the ones that start with a letter

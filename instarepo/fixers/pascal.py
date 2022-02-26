@@ -10,11 +10,11 @@ JCF_EXE = "C:\\opt\\jcf_243_exe\\JCF.exe"
 
 
 def trim_trailing_whitespace(filename: str):
-    with open(filename, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    with open(filename, "r", encoding="utf-8") as file:
+        lines = file.readlines()
     lines = [line.rstrip() + "\n" for line in lines]
-    with open(filename, "w", encoding="utf-8") as f:
-        f.writelines(lines)
+    with open(filename, "w", encoding="utf-8") as file:
+        file.writelines(lines)
 
 
 @functools.lru_cache(maxsize=None)
@@ -55,8 +55,8 @@ class AutoFormatFix:
         if not find_jedi_cfg():
             logging.debug("JEDI Code Format cfg not found")
             return []
-        with os.scandir(self.git.dir) as it:
-            for entry in it:
+        with os.scandir(self.git.dir) as iterator:
+            for entry in iterator:
                 if is_pascal_entry(entry):
                     self._process(entry.path)
         if len(self.files) <= 0:
@@ -65,10 +65,10 @@ class AutoFormatFix:
         self.git.commit(msg)
         return [msg]
 
-    def _process(self, pas_file: str):
-        with open(pas_file, "r", encoding="utf-8") as f:
-            old_contents = f.read()
-        rel_path = os.path.relpath(pas_file, self.git.dir)
+    def _process(self, pas_filename: str):
+        with open(pas_filename, "r", encoding="utf-8") as file:
+            old_contents = file.read()
+        rel_path = os.path.relpath(pas_filename, self.git.dir)
         # pass through jcf
         if self.verbose:
             subprocess.run(self._build_args(rel_path), check=True, cwd=self.git.dir)
@@ -80,15 +80,15 @@ class AutoFormatFix:
                 stdout=subprocess.PIPE,
             )
         # trim trailing whitespace
-        trim_trailing_whitespace(pas_file)
+        trim_trailing_whitespace(pas_filename)
         # check if we have changes
-        with open(pas_file, "r", encoding="utf-8") as f:
-            new_contents = f.read()
+        with open(pas_filename, "r", encoding="utf-8") as file:
+            new_contents = file.read()
         if old_contents != new_contents:
             self.git.add(rel_path)
             self.files.append(rel_path)
 
-    def _build_args(self, rel_pas_file: str):
+    def _build_args(self, rel_pas_filename: str):
         args = [
             JCF_EXE,
             "-config=" + find_jedi_cfg(),
@@ -96,6 +96,6 @@ class AutoFormatFix:
             "-inplace",
             "-y",
             "-f",
-            rel_pas_file,
+            rel_pas_filename,
         ]
         return args
