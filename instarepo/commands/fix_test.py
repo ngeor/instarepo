@@ -174,13 +174,13 @@ def test_try_get_fix_order():
 
 def test_create_composite_fixer():
     # arrange
-    git = instarepo.git.GitWorkingDir("/tmp")
+    context = instarepo.fixers.context.Context(git=None, config=None)
     fixer_classes = [
         instarepo.fixers.changelog.MustHaveCliffTomlFix,
         instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
     ]
     # act
-    composite_fixer = create_composite_fixer(fixer_classes, git, config=())
+    composite_fixer = create_composite_fixer(fixer_classes, context)
     # assert
     assert composite_fixer
     assert isinstance(composite_fixer, instarepo.fixers.base.CompositeFix)

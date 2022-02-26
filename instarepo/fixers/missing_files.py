@@ -59,26 +59,28 @@ class MustHaveGitHubFundingFix(MissingFileFix):
     """
     Ensures a GitHub funding file exists (.github/FUNDING.yml).
     The template file needs to be configured in the configuration file.
+
+    Does not run for locally checked out repositories.
     """
 
     def __init__(self, context: instarepo.fixers.context.Context):
         super().__init__(context.git, ".github/FUNDING.yml")
-        if context.repo:
-            self.repo = context.repo
-            self.contents = ""
-            # TODO figure out repo name for local directory
-            template = context.config.get_setting(self.repo.full_name, "funding_yml")
-            if template:
-                with open(template, "r", encoding="utf-8") as file:
-                    self.contents = file.read()
+        self.context = context
 
     def should_process_repo(self):
         return (
-            self.repo and not self.repo.private and not self.repo.fork and self.contents
+            self.repo
+            and not self.repo.private
+            and not self.repo.fork
+            and self._get_template_filename()
         )
 
     def get_contents(self):
-        return self.contents
+        with open(self._get_template_filename(), "r", encoding="utf-8") as file:
+            return file.read()
+
+    def _get_template_filename(self):
+        return self.context.get_setting("funding_yml")
 
 
 class MustHaveGitIgnoreFix(MissingFileFix):

@@ -78,10 +78,12 @@ class FixLocal(FixBase):
         super().run()
         logging.info("Processing local repo %s", self.local_dir)
         git = instarepo.git.GitWorkingDir(self.local_dir, quiet=not self.verbose)
-        composite_fixer = create_composite_fixer(
-            self.fixer_classes, git=git, config=self.config, verbose=self.verbose
+        context = instarepo.fixers.context.Context(
+            git=git, config=self.config, verbose=self.verbose
         )
-        composite_fixer.run()
+        if context.get_setting("enabled"):
+            composite_fixer = create_composite_fixer(self.fixer_classes, context)
+            composite_fixer.run()
 
 
 BRANCH_NAME = "instarepo_branch"
@@ -152,13 +154,16 @@ class FixRemote(FixBase):
                 git.checkout(BRANCH_NAME)
         else:
             git.create_branch(BRANCH_NAME)
-        composite_fixer = create_composite_fixer(
-            self.fixer_classes,
+        context = instarepo.fixers.context.Context(
             git=git,
             config=self.config,
             repo=repo,
             github=self.github,
             verbose=self.verbose,
+        )
+        composite_fixer = create_composite_fixer(
+            self.fixer_classes,
+            context,
         )
         changes = composite_fixer.run()
         if changes:
@@ -262,17 +267,7 @@ class FixRemote(FixBase):
         return True
 
 
-def create_composite_fixer(
-    fixer_classes,
-    git: instarepo.git.GitWorkingDir,
-    config: instarepo.fixers.config.Config,
-    repo: Optional[instarepo.github.Repo] = None,
-    github: Optional[instarepo.github.GitHub] = None,
-    verbose: bool = False,
-):
-    context = instarepo.fixers.context.Context(
-        git=git, config=config, repo=repo, github=github, verbose=verbose
-    )
+def create_composite_fixer(fixer_classes, context: instarepo.fixers.context.Context):
     return instarepo.fixers.base.CompositeFix(
         list(
             map(

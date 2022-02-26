@@ -175,6 +175,17 @@ class GitWorkingDir:
         parts = result.stdout.split("\t")
         return int(parts[0]), int(parts[1])
 
+    def get_remote_url(self):
+        # git remote get-url origin
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            check=True,
+            cwd=self.dir,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+        )
+        return result.stdout.strip()
+
 
 def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:
     args = ["git", "clone"]
