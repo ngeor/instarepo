@@ -11,6 +11,19 @@ import instarepo.github
 import instarepo.xml_utils
 from .base import ensure_directories
 from .finders import is_file_of_extension
+from ..parsers import (
+    many,
+    combine_or,
+    word,
+    one_char_if,
+    quoted_string,
+    combine_and_opt,
+    surrounded_by_space,
+    is_symbol,
+    until_eol_or_eof,
+    is_cr_lf,
+    any_char,
+)
 
 
 class DotNetFrameworkVersionFix:
@@ -203,15 +216,7 @@ def get_projects_from_sln_file_contents(contents: str) -> Iterable[str]:
 
     :param contents: The contents of a Visual Studio sln file.
     """
-    for line in contents.splitlines():
-        if line.startswith('Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}")'):
-            parts = line.split(",")
-            csproj = parts[1].strip()
-            if csproj.startswith('"'):
-                csproj = csproj[1:].strip()
-            if csproj.endswith('"'):
-                csproj = csproj[:-1].strip()
-            yield csproj
+    return SlnProjectFinder(contents)
 
 
 def get_web_configs_from_dir(csproj_dir: str) -> Iterable[str]:
@@ -225,3 +230,83 @@ def get_web_configs_from_dir(csproj_dir: str) -> Iterable[str]:
         for entry in iterator:
             if entry.is_file() and entry.name.lower() == "web.config":
                 yield entry.path
+
+
+class SlnProjectFinder:
+    def __init__(self, contents: str):
+        self._parser = SlnParser(contents)
+
+    def next(self):
+        while self._parser.find("Project"):
+            project_path = self._read_project_path()
+            if project_path:
+                return project_path
+
+    def _read_project_path(self):
+        lparen = self._parser.next()
+        if lparen != "(":
+            return
+        project_type_guid = self._parser.next()
+        if project_type_guid[1:-1] not in [
+            "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}",
+            "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}",
+        ]:
+            return
+        rparen = self._parser.next()
+        if rparen != ")":
+            return
+        eq = self._parser.next()
+        if eq != "=":
+            return
+        _project_name = self._parser.next()
+        comma = self._parser.next()
+        if comma != ",":
+            return
+        csproj_path = self._parser.next()
+        return csproj_path[1:-1]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        result = self.next()
+        if result:
+            return result
+        else:
+            raise StopIteration
+
+
+class SlnParser:
+    def __init__(self, contents: str):
+        self._contents = contents
+        self._parser = combine_or(
+            comment(),
+            word(),
+            version_number(),
+            quoted_string(),
+            surrounded_by_space(one_char_if(is_symbol)),
+            many(one_char_if(is_cr_lf)),
+            any_char(),
+        )
+
+    def next(self):
+        result, remaining = self._parser(self._contents)
+        self._contents = remaining
+        return result
+
+    def find(self, needle: str):
+        """
+        Returns the first token that is equal to the parameter.
+        """
+        token = self.next()
+        while token and token != needle:
+            token = self.next()
+        return token
+
+
+def version_number():
+    return many(one_char_if(lambda char: char == "." or (char >= "0" and char <= "9")))
+
+
+def comment():
+    return combine_and_opt(one_char_if(lambda ch: ch == "#"), until_eol_or_eof())
