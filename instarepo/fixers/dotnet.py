@@ -24,7 +24,7 @@ from ..parsers import (
 )
 
 
-class MustHaveGitHubActionFix:
+class MustHaveCIFix:
     """
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
     """

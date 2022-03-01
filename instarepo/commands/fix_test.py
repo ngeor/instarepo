@@ -77,9 +77,10 @@ def test_fixer_has_doc_string(fixer_class):  # pylint: disable=redefined-outer-n
 def test_fixer_class_to_fixer_key():
     """Tests various fixer classes can be mapped to a key"""
     assert (
-        fixer_class_to_fixer_key(instarepo.fixers.dotnet.MustHaveGitHubActionFix)
-        == "dotnet.must_have_git_hub_action"
+        fixer_class_to_fixer_key(instarepo.fixers.dotnet.MustHaveCIFix)
+        == "dotnet.must_have_ci"
     )
+    assert fixer_class_to_fixer_key(instarepo.fixers.maven.UrlFix) == "maven.url"
 
 
 def test_can_create_fixer(fixer_class):  # pylint: disable=redefined-outer-name
@@ -121,13 +122,13 @@ class TestSelectFixerClasses:
 
     def test_filter_by_name(self):
         assert [
-            instarepo.fixers.dotnet.MustHaveGitHubActionFix,
+            instarepo.fixers.dotnet.MustHaveCIFix,
         ] == select_fixer_classes(only_fixers=["dotnet"])
 
     def test_filter_by_two_names(self):
         assert [
-            instarepo.fixers.dotnet.MustHaveGitHubActionFix,
-            instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
+            instarepo.fixers.dotnet.MustHaveCIFix,
+            instarepo.fixers.maven.MustHaveCIFix,
             instarepo.fixers.maven.MavenBadgesFix,
             instarepo.fixers.maven.UrlFix,
         ] == select_fixer_classes(only_fixers=["dotnet", "maven"])
@@ -137,9 +138,7 @@ class TestSelectFixerClasses:
             select_fixer_classes(only_fixers=["a"], except_fixers=["b"])
 
     def test_filter_except(self):
-        assert [
-            instarepo.fixers.dotnet.MustHaveGitHubActionFix,
-        ] == select_fixer_classes(
+        assert [instarepo.fixers.dotnet.MustHaveCIFix,] == select_fixer_classes(
             except_fixers=[
                 "changelog",
                 "ci",
@@ -155,7 +154,7 @@ class TestSelectFixerClasses:
     def test_sort(self):
         assert [
             instarepo.fixers.changelog.MustHaveCliffTomlFix,
-            instarepo.fixers.dotnet.MustHaveGitHubActionFix,
+            instarepo.fixers.dotnet.MustHaveCIFix,
         ] == select_fixer_classes(only_fixers=["dotnet", "changelog"])
 
 
@@ -164,7 +163,7 @@ def test_classes_in_module():
 
 
 def test_try_get_fix_order():
-    assert try_get_fixer_order(instarepo.fixers.dotnet.MustHaveGitHubActionFix) == 0
+    assert try_get_fixer_order(instarepo.fixers.dotnet.MustHaveCIFix) == 0
     assert try_get_fixer_order(instarepo.fixers.changelog.MustHaveCliffTomlFix) == -100
 
 

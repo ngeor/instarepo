@@ -224,7 +224,7 @@ ci.no_travis
     Removes the .travis.yml file
 ci.no_travis_badge
     Removes the Travis badge from README files
-dotnet.must_have_git_hub_action
+dotnet.must_have_ci
 
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
 
@@ -240,7 +240,7 @@ license.must_have_license
 
     Does not run for forks, private repos, and local git repos.
 
-maven.must_have_maven_git_hub_workflow
+maven.must_have_ci
     If missing, adds a GitHub action Maven build workflow
 maven.maven_badges
 

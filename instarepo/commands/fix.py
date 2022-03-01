@@ -352,13 +352,33 @@ def _pascal_case_to_underscore_case(value: str) -> str:
     into a lower case underscore separated string (e.g. my_class).
     """
     result = ""
+    state = "initial"
+    partial = ""
     for char in value:
         if "A" <= char <= "Z":
-            if result:
-                result += "_"
-            result += char.lower()
+            if state == "initial":
+                state = "upper"
+            elif state == "upper":
+                state = "multi-upper"
+            else:
+                if result:
+                    result += "_"
+                result += partial
+                partial = ""
+                state = "upper"
+            partial += char.lower()
         else:
-            result += char
+            if state == "multi-upper":
+                if result:
+                    result += "_"
+                result += partial
+                partial = ""
+            partial += char
+            state = "lower"
+
+    if result:
+        result += "_"
+    result += partial
     return result
 
 

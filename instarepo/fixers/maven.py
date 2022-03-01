@@ -46,7 +46,7 @@ jobs:
 """
 
 
-class MustHaveMavenGitHubWorkflowFix(MissingFileFix):
+class MustHaveCIFix(MissingFileFix):
     """If missing, adds a GitHub action Maven build workflow"""
 
     def __init__(self, context: instarepo.fixers.context.Context):
