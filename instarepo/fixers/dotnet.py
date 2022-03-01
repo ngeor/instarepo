@@ -1,8 +1,6 @@
 """Fixers for .NET projects"""
-import logging
 import os
 import os.path
-import xml.etree.ElementTree as ET
 from typing import Iterable, List
 
 import instarepo.fixers.context
@@ -24,90 +22,6 @@ from ..parsers import (
     is_cr_lf,
     any_char,
 )
-
-
-class DotNetFrameworkVersionFix:
-    """Sets the .NET Framework version to 4.7.2 in csproj and web.config files"""
-
-    def __init__(self, context: instarepo.fixers.context.Context):
-        self.context = context
-        self.result = []
-
-    def run(self):
-        # ensure abspath so that dirpath in the loop is also absolute
-        self.result = []
-        with os.scandir(self.context.git.dir) as iterator:
-            for entry in iterator:
-                if is_file_of_extension(entry, ".sln"):
-                    self.process_sln(entry.path)
-        return self.result
-
-    def process_sln(self, sln_path: str):
-        for relative_csproj in get_projects_from_sln_file(sln_path):
-            parts = relative_csproj.replace("\\", "/").split("/")
-            abs_csproj = os.path.join(self.context.git.dir, *parts)
-            self.process_csproj(abs_csproj)
-            directory_parts = parts[0:-1]
-            csproj_dir = os.path.join(self.context.git.dir, *directory_parts)
-            self.process_web_configs(csproj_dir)
-
-    def process_web_configs(self, csproj_dir: str):
-        for web_config in get_web_configs_from_dir(csproj_dir):
-            self.process_web_config(web_config)
-
-    def process_csproj(self, filename: str):
-        logging.debug("Processing csproj %s", filename)
-        ET.register_namespace("", "http://schemas.microsoft.com/developer/msbuild/2003")
-        try:
-            tree = instarepo.xml_utils.parse(filename)
-            target_framework_version = instarepo.xml_utils.find_at_tree(
-                tree,
-                "{http://schemas.microsoft.com/developer/msbuild/2003}PropertyGroup",
-                "{http://schemas.microsoft.com/developer/msbuild/2003}TargetFrameworkVersion",
-            )
-            if target_framework_version is None:
-                return
-            desired_framework_version = "v4.7.2"
-            if target_framework_version.text == desired_framework_version:
-                return
-            target_framework_version.text = desired_framework_version
-            tree.write(
-                filename,
-                xml_declaration=True,
-                encoding="utf-8",
-            )
-        finally:
-            ET.register_namespace(
-                "msbuild", "http://schemas.microsoft.com/developer/msbuild/2003"
-            )
-        relpath = os.path.relpath(filename, self.context.git.dir)
-        self.context.git.add(relpath)
-        msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
-        self.context.git.commit(msg)
-        self.result.append(msg)
-
-    def process_web_config(self, filename: str):
-        logging.debug("Processing web.config %s", filename)
-        tree = instarepo.xml_utils.parse(filename)
-        compilation = instarepo.xml_utils.find_at_tree(
-            tree, "system.web", "compilation"
-        )
-        if compilation is None:
-            return
-        desired_framework_version = "4.7.2"
-        if compilation.attrib.get("targetFramework", "") == desired_framework_version:
-            return
-        compilation.attrib["targetFramework"] = desired_framework_version
-        tree.write(
-            filename,
-            xml_declaration=True,
-            encoding="utf-8",
-        )
-        relpath = os.path.relpath(filename, self.context.git.dir)
-        self.context.git.add(relpath)
-        msg = f"chore: Upgraded {relpath} to .NET {desired_framework_version}"
-        self.context.git.commit(msg)
-        self.result.append(msg)
 
 
 class MustHaveGitHubActionFix:
@@ -217,19 +131,6 @@ def get_projects_from_sln_file_contents(contents: str) -> Iterable[str]:
     :param contents: The contents of a Visual Studio sln file.
     """
     return SlnProjectFinder(contents)
-
-
-def get_web_configs_from_dir(csproj_dir: str) -> Iterable[str]:
-    """
-    Gets the files named web.config in a directory.
-    In a case-sensitive file system, if the directory contains both
-    web.config and Web.Config, both will be returned.
-    The iterator yields absolute paths.
-    """
-    with os.scandir(csproj_dir) as iterator:
-        for entry in iterator:
-            if entry.is_file() and entry.name.lower() == "web.config":
-                yield entry.path
 
 
 class SlnProjectFinder:

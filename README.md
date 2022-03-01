@@ -224,8 +224,6 @@ ci.no_travis
     Removes the .travis.yml file
 ci.no_travis_badge
     Removes the Travis badge from README files
-dotnet.dot_net_framework_version
-    Sets the .NET Framework version to 4.7.2 in csproj and web.config files
 dotnet.must_have_git_hub_action
 
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.

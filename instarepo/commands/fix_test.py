@@ -121,13 +121,11 @@ class TestSelectFixerClasses:
 
     def test_filter_by_name(self):
         assert [
-            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveGitHubActionFix,
         ] == select_fixer_classes(only_fixers=["dotnet"])
 
     def test_filter_by_two_names(self):
         assert [
-            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveGitHubActionFix,
             instarepo.fixers.maven.MustHaveMavenGitHubWorkflowFix,
             instarepo.fixers.maven.MavenBadgesFix,
@@ -140,7 +138,6 @@ class TestSelectFixerClasses:
 
     def test_filter_except(self):
         assert [
-            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveGitHubActionFix,
         ] == select_fixer_classes(
             except_fixers=[
@@ -158,7 +155,6 @@ class TestSelectFixerClasses:
     def test_sort(self):
         assert [
             instarepo.fixers.changelog.MustHaveCliffTomlFix,
-            instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
             instarepo.fixers.dotnet.MustHaveGitHubActionFix,
         ] == select_fixer_classes(only_fixers=["dotnet", "changelog"])
 
@@ -177,7 +173,6 @@ def test_create_composite_fixer():
     context = instarepo.fixers.context.Context(git=None, config=None)
     fixer_classes = [
         instarepo.fixers.changelog.MustHaveCliffTomlFix,
-        instarepo.fixers.dotnet.DotNetFrameworkVersionFix,
     ]
     # act
     composite_fixer = create_composite_fixer(fixer_classes, context)
@@ -187,7 +182,4 @@ def test_create_composite_fixer():
     assert composite_fixer.rules
     assert isinstance(
         composite_fixer.rules[0], instarepo.fixers.changelog.MustHaveCliffTomlFix
-    )
-    assert isinstance(
-        composite_fixer.rules[1], instarepo.fixers.dotnet.DotNetFrameworkVersionFix
     )
