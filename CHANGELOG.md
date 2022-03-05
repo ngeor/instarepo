@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2022-03-05
+
+### Bug Fixes
+
+- Support parsing dotnet projects created by dotnet CLI
+
+### Features
+
+- Implemented config file support (#49) (Fixes #35)
+- [**breaking**] Removed rule "dotnet.dot_net_framework_version"
+- [**breaking**] Renamed dotnet.must_have_git_hub_action to dotnet.must_have_ci and maven.must_have_maven_git_hub_workflow to maven.must_have_ci
+- Support pipeline for Windows .NET projects
+- Dotnet.must_have_git_hub_action can now run locally too (Fixes #43)
+
+## [0.10.1] - 2022-02-20
+
+### Bug Fixes
+
+- Removed obsolete script
+
+### Miscellaneous Tasks
+
+- Releasing through CI
+
 ## [0.10.0] - 2022-02-19
 
 ### Bug Fixes
