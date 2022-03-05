@@ -1,6 +1,8 @@
 """Fixers for .NET projects"""
+import logging
 import os
 import os.path
+from string import Template
 from typing import Iterable, List
 
 import instarepo.fixers.context
@@ -33,10 +35,29 @@ class MustHaveCIFix:
         self.context = context
 
     def run(self):
-        if not self._should_process_repo():
+        sln_paths = list(self._get_sln_paths())
+        # multiple sln files not supported
+        if len(sln_paths) != 1:
             return []
-
-        expected_contents = get_workflow_contents(self.context.default_branch())
+        sln_path = sln_paths[0]
+        cs_projects = [
+            self.context.git.join(relative_cs_proj)
+            for relative_cs_proj in get_projects_from_sln_file(sln_path)
+        ]
+        if not cs_projects:
+            return []
+        rel_sln_path = os.path.relpath(sln_path, self.context.git.dir)
+        sln_name, _ = os.path.splitext(os.path.basename(sln_path))
+        artifact_path = f"{sln_name}*/bin/Release/*/{sln_name}*.*"
+        frameworks = map(get_csproj_target_framework, cs_projects)
+        if needs_windows(frameworks):
+            expected_contents = get_windows_workflow_contents(
+                self.context.default_branch(), rel_sln_path, artifact_path
+            )
+        else:
+            expected_contents = get_linux_workflow_contents(
+                self.context.default_branch(), artifact_path
+            )
         dir_name = ".github/workflows"
         ensure_directories(self.context.git, dir_name)
         file_name = dir_name + "/build.yml"
@@ -63,24 +84,11 @@ class MustHaveCIFix:
             return [msg]
         return []
 
-    def _should_process_repo(self) -> bool:
-        """
-        Checks if the repo should be processed.
-        The repo should be processed if it contains exactly one sln file
-        at the root directory which references at least one csproj file.
-        """
-        sln_path = ""
+    def _get_sln_paths(self):
         with os.scandir(self.context.git.dir) as iterator:
             for entry in iterator:
                 if is_file_of_extension(entry, ".sln"):
-                    if sln_path:
-                        # multiple sln files not supported currently
-                        return False
-                    else:
-                        sln_path = entry.path
-        if not sln_path:
-            return False
-        return len(get_projects_from_sln_file(sln_path)) > 0
+                    yield entry.path
 
     def _rm_appveyor(self):
         if self.context.git.isfile("appveyor.yml"):
@@ -89,14 +97,15 @@ class MustHaveCIFix:
         return False
 
 
-def get_workflow_contents(default_branch: str):
-    return """name: CI
+def get_linux_workflow_contents(default_branch: str, artifact_path: str):
+    template = Template(
+        """name: CI
 
 on:
   push:
-    branches: [ trunk ]
+    branches: [ ${default_branch} ]
   pull_request:
-    branches: [ trunk ]
+    branches: [ ${default_branch} ]
 
 jobs:
   build:
@@ -109,8 +118,54 @@ jobs:
         dotnet-version: '3.1.x'
     - run: dotnet build
     - run: dotnet test -v normal
-""".replace(
-        "trunk", default_branch
+    - run: dotnet build -c Release
+    - name: Upload binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries
+        path: ${artifact_path}
+"""
+    )
+    return template.substitute(
+        default_branch=default_branch, artifact_path=artifact_path
+    )
+
+
+def get_windows_workflow_contents(
+    default_branch: str, sln_path: str, artifact_path: str
+):
+    template = Template(
+        """name: CI
+
+on:
+  push:
+    branches: [ ${default_branch} ]
+  pull_request:
+    branches: [ ${default_branch} ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Add msbuild to PATH # https://github.com/microsoft/setup-msbuild
+      uses: microsoft/setup-msbuild@v1.1
+    - name: Setup NuGet # https://github.com/NuGet/setup-nuget
+      uses: nuget/setup-nuget@v1
+    - name: Restore NuGet packages
+      run: nuget restore ${sln_path}
+    - name: Build project
+      run: msbuild -t:rebuild -property:Configuration=Release ${sln_path}
+    - name: Upload binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries
+        path: ${artifact_path}
+"""
+    )
+    return template.substitute(
+        default_branch=default_branch, sln_path=sln_path, artifact_path=artifact_path
     )
 
 
@@ -211,3 +266,20 @@ def version_number():
 
 def comment():
     return combine_and_opt(one_char_if(lambda ch: ch == "#"), until_eol_or_eof())
+
+
+def get_csproj_target_framework(csproj_filename):
+    tree = instarepo.xml_utils.parse(csproj_filename)
+    if tree is None:
+        logging.warn("Could not parse %s", csproj_filename)
+        return
+    node = instarepo.xml_utils.find_at_tree(tree, "PropertyGroup", "TargetFramework")
+    if node is None:
+        logging.warn("Could not find target framework of %s", csproj_filename)
+    return node.text
+
+
+def needs_windows(frameworks: Iterable[str]):
+    return any(
+        filter(lambda framework: framework and framework.startswith("net4"), frameworks)
+    )
