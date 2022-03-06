@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.11.2] - 2022-03-06
+
+### Bug Fixes
+
+- [**breaking**] Use config file to look up cliff.toml
+
 ## [0.11.1] - 2022-03-06
 
 ### Bug Fixes
