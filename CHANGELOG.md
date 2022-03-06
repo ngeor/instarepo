@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.11.1] - 2022-03-06
+
+### Bug Fixes
+
+- Avoid crash for old .NET projects
+
 ## [0.11.0] - 2022-03-05
 
 ### Bug Fixes
