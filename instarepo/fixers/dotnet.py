@@ -276,6 +276,7 @@ def get_csproj_target_framework(csproj_filename):
     node = instarepo.xml_utils.find_at_tree(tree, "PropertyGroup", "TargetFramework")
     if node is None:
         logging.warn("Could not find target framework of %s", csproj_filename)
+        return
     return node.text
 
 
