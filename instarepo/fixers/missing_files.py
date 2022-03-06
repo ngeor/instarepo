@@ -78,7 +78,7 @@ class MustHaveGitHubFundingFix(MissingFileFix):
             return file.read()
 
     def _get_template_filename(self):
-        return self.context.get_setting("funding_yml")
+        return self.context.get_setting("funding.yml")
 
 
 class MustHaveGitIgnoreFix(MissingFileFix):

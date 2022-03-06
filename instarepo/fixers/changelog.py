@@ -1,4 +1,3 @@
-import os.path
 import instarepo.fixers.context
 from instarepo.fixers.base import MissingFileFix
 
@@ -10,8 +9,14 @@ class MustHaveCliffTomlFix(MissingFileFix):
 
     def __init__(self, context: instarepo.fixers.context.Context):
         super().__init__(context.git, "cliff.toml")
+        self.context = context
+
+    def should_process_repo(self):
+        return self._get_template_filename()
 
     def get_contents(self):
-        template = os.path.join(os.path.dirname(__file__), "..", "..", "cliff.toml")
-        with open(template, "r", encoding="utf-8") as file:
+        with open(self._get_template_filename(), "r", encoding="utf-8") as file:
             return file.read()
+
+    def _get_template_filename(self):
+        return self.context.get_setting("cliff.toml")

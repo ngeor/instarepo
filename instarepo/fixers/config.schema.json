@@ -18,8 +18,12 @@
                     "description": "Should the repo be processed or not",
                     "type": "boolean"
                 },
-                "funding_yml": {
+                "funding.yml": {
                     "description": "Location of the FUNDING.YML file",
+                    "type": "string"
+                },
+                "cliff.toml": {
+                    "description": "Location of the cliff.toml file",
                     "type": "string"
                 }
             },
