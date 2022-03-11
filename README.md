@@ -160,14 +160,10 @@ instarepo will:
 By default skips forks. It's not possible to select archived repositories, as they are read-only.
 
 ```
-usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN] [--sort {full_name,created,updated,pushed}]
-                     [--direction {asc,desc}]
-                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE]
-                     [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
-                     [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER]
-                     [--pushed-before PUSHED_BEFORE] [--dry-run]
-                     [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] | --except-fixers EXCEPT_FIXERS
-                     [EXCEPT_FIXERS ...]] [--local-dir LOCAL_DIR] [--auto-merge] [-c CONFIG_FILE]
+usage: instarepo fix [-h] [-u USERNAME] [-t TOKEN] [--sort {full_name,created,updated,pushed}] [--direction {asc,desc}]
+                     [--only-language ONLY_LANGUAGE | --except-language EXCEPT_LANGUAGE] [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
+                     [--forks {allow,deny,only}] [--pushed-after PUSHED_AFTER] [--pushed-before PUSHED_BEFORE] [--dry-run] [--only-fixers ONLY_FIXERS [ONLY_FIXERS ...] |
+                     --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]] [--local-dir LOCAL_DIR] [--auto-merge] [-c CONFIG_FILE]
 
 Runs automatic fixes on the repositories
 
@@ -187,8 +183,7 @@ optional arguments:
   --except-fixers EXCEPT_FIXERS [EXCEPT_FIXERS ...]
                         Do not run fixers that have the given prefixes
   --local-dir LOCAL_DIR
-                        Apply fixes for a project at a local working directory. Skips all GitHub
-                        related calls and git push.
+                        Apply fixes for a project at a local working directory. Skips all GitHub related calls and git push.
   --auto-merge          Automatically merge open MRs that pass CI.
   -c CONFIG_FILE, --config-file CONFIG_FILE
                         The location of an optional configuration file
@@ -207,11 +202,9 @@ Filtering:
   --forks {allow,deny,only}
                         Filter forks
   --pushed-after PUSHED_AFTER
-                        Only process repositories that had changes pushed after the given time
-                        interval e.g. 4h
+                        Only process repositories that had changes pushed after the given time interval e.g. 4h
   --pushed-before PUSHED_BEFORE
-                        Only process repositories that had changes pushed before the given time
-                        interval e.g. 4h
+                        Only process repositories that had changes pushed before the given time interval e.g. 4h
 
 Example:
     instarepo fix -u USER -t TOKEN
@@ -224,6 +217,10 @@ ci.no_travis
     Removes the .travis.yml file
 ci.no_travis_badge
     Removes the Travis badge from README files
+ci.python_build
+    Adds a build GitHub action for Python projects
+ci.python_release
+    Adds a release GitHub action for Python projects
 dotnet.must_have_ci
 
     Creates a GitHub Action workflow for CSharp projects, deletes appveyor.yml if present.
