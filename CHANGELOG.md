@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2022-03-12
+
+### Bug Fixes
+
+- Support older (msbuild) style csproj files
+
+### Features
+
+- Fixers for adding Python build and release workflows
+
 ## [0.11.2] - 2022-03-06
 
 ### Bug Fixes
