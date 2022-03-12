@@ -4,7 +4,10 @@ from .dotnet import (
     get_projects_from_sln_file_contents,
     comment,
     SlnParser,
+    csproj_root_node_to_os,
 )
+import xml.etree.ElementTree as ET
+from instarepo.xml_utils import create_parser
 
 
 def test_get_projects_from_sln_file_contents():
@@ -92,3 +95,36 @@ EndProject"""
     assert parser.next() == '"{46D05687-EB9B-4885-9A14-1BDC8BBB253B}"'
     assert parser.next() == "\n"
     assert parser.next() == "EndProject"
+
+
+def test_parse_msbuild_style_csproj():
+    input = """<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+</Project>
+"""
+    root = ET.fromstring(input, create_parser())
+    assert csproj_root_node_to_os(root) == "windows"
+
+
+def test_parse_dotnet_style_csproj():
+    input = """<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+</Project>
+"""
+    root = ET.fromstring(input, create_parser())
+    assert csproj_root_node_to_os(root) == "linux"
+
+
+def test_parse_dotnet_net47_style_csproj():
+    input = """<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+  </PropertyGroup>
+</Project>
+"""
+    root = ET.fromstring(input, create_parser())
+    assert csproj_root_node_to_os(root) == "windows"

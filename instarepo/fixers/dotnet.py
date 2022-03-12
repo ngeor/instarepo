@@ -48,13 +48,16 @@ class MustHaveCIFix:
             return []
         rel_sln_path = os.path.relpath(sln_path, self.context.git.dir)
         sln_name, _ = os.path.splitext(os.path.basename(sln_path))
-        artifact_path = f"{sln_name}*/bin/Release/*/{sln_name}*.*"
-        frameworks = map(get_csproj_target_framework, cs_projects)
-        if needs_windows(frameworks):
+        needs_windows = any(
+            filter(lambda x: x == "windows", map(csproj_file_to_os, cs_projects))
+        )
+        if needs_windows:
+            artifact_path = f"{sln_name}*/bin/Release/{sln_name}*.*"
             expected_contents = get_windows_workflow_contents(
                 self.context.default_branch(), rel_sln_path, artifact_path
             )
         else:
+            artifact_path = f"{sln_name}*/bin/Release/*/{sln_name}*.*"
             expected_contents = get_linux_workflow_contents(
                 self.context.default_branch(), artifact_path
             )
@@ -268,19 +271,32 @@ def comment():
     return combine_and_opt(one_char_if(lambda ch: ch == "#"), until_eol_or_eof())
 
 
-def get_csproj_target_framework(csproj_filename):
+def csproj_file_to_os(csproj_filename):
     tree = instarepo.xml_utils.parse(csproj_filename)
     if tree is None:
-        logging.warn("Could not parse %s", csproj_filename)
+        logging.warning("Could not parse %s", csproj_filename)
         return
-    node = instarepo.xml_utils.find_at_tree(tree, "PropertyGroup", "TargetFramework")
+    return csproj_root_node_to_os(tree.getroot(), csproj_filename)
+
+
+def csproj_root_node_to_os(root_node, csproj_filename=""):
+    """
+    Determines the OS needed by the given csproj file. The root_node
+    is the root node of the parsed XML file.
+    """
+    if root_node is None:
+        logging.warning("No root node for csproj file %s", csproj_filename)
+        return
+    if root_node.tag == "{http://schemas.microsoft.com/developer/msbuild/2003}Project":
+        return "windows"
+    node = instarepo.xml_utils.find(root_node, "PropertyGroup", "TargetFramework")
     if node is None:
-        logging.warn("Could not find target framework of %s", csproj_filename)
+        logging.warning("Could not find target framework of %s", csproj_filename)
         return
-    return node.text
-
-
-def needs_windows(frameworks: Iterable[str]):
-    return any(
-        filter(lambda framework: framework and framework.startswith("net4"), frameworks)
-    )
+    if not node.text:
+        logging.warning("Empty TargetFramework for %s", csproj_filename)
+        return
+    if node.text.startswith("net4"):
+        return "windows"
+    if node.text.startswith("netcore") or node.text.startswith("netstandard"):
+        return "linux"
