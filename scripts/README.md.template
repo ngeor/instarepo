@@ -1,0 +1,126 @@
+# instarepo
+
+[![Python CI](https://github.com/ngeor/instarepo/actions/workflows/build.yml/badge.svg)](https://github.com/ngeor/instarepo/actions/workflows/build.yml)
+![PyPI](https://img.shields.io/pypi/v/instarepo)
+
+CLI automation tool to batch process multiple repositories.
+
+## Requirements
+
+Requirements:
+
+- Python 3.8+
+- pip
+- pipenv (for development)
+
+## Installation
+
+### Simple
+
+Install from PyPI with `pip3 install --user instarepo`.
+
+### Development mode
+
+- Install dependencies with `pipenv install --dev`
+- Inside a pipenv shell, run: `python -m instarepo.main`.
+
+### Manual installation
+
+- Install dependencies with `pipenv install --dev`
+- Build the wheel with `pipenv run python -m build`
+- Install the wheel with `pip install [--force-reinstall] --user dist/path-to-wheel.whl`
+
+You'll be able to invoke `instarepo` by just `instarepo`.
+
+Uninstall with `pip uninstall instarepo`.
+
+## Usage
+
+```
+${{pipenv run python -m instarepo.main -h}}
+```
+
+### Login
+
+Provide GitHub credentials for subsequent commands. Credentials are stored
+in the Windows registry under `HKEY_CURRENT_USER\SOFTWARE\ngeor\instarepo`.
+On Linux/Mac, the credentials are stored in `~/.instarepo.ini`.
+
+```
+${{pipenv run python -m instarepo.main login -h}}
+```
+
+### Logout
+
+Delete previously stored GitHub credentials.
+
+```
+${{pipenv run python -m instarepo.main logout -h}}
+```
+
+### List
+
+Lists the repositories.
+
+By default, skips forks and archived repositories.
+
+```
+${{pipenv run python -m instarepo.main list -h}}
+```
+
+### Fix
+
+Applies automatic fixes on repositories.
+
+instarepo will:
+
+- clone all your GitHub repositories in a temporary local folder
+- process all non-archived repositories and apply automatic fixes
+- create a merge request for every repository that had changes
+
+By default skips forks. It's not possible to select archived repositories, as they are read-only.
+
+```
+${{pipenv run python -m instarepo.main fix -h}}
+```
+
+### Analyze
+
+Analyzes repositories.
+
+By default, skips forks and archived repositories.
+
+```
+${{pipenv run python -m instarepo.main analyze -h}}
+```
+
+### Clone
+
+Clones repositories from GitHub locally. Skips repositories that are already present.
+
+By default, skips forks and archived repositories.
+
+```
+${{pipenv run python -m instarepo.main clone -h}}
+```
+
+## Development
+
+- Files are formatted with `black`
+- Unit tests with `pytest`
+- Lint with `pylint --disable=R,C0116,C0114,C0115,C0301 instarepo`
+
+### Creating a new release
+
+- Make sure you're on the latest of the default branch and there are no pending changes
+- Update the version in `instarepo/__init__.py`
+- Update the changelog with `git-cliff -t x.y.z -o CHANGELOG.md`
+- Commit with a message like "chore(release): prepare for version x.y.z"
+- Create a tag `vx.y.z`
+- Push with `git push --follow-tags`
+- Clean to make sure there are no build files with `git clean -fdx`
+- Build the wheel `python3 -m build` (inside pipenv)
+- Upload the wheel with `twine upload dist/*`
+- Update again the versions in `instarepo/__init__.py` to set the
+  next development versions.
+- Commit with a message like "chore(release): prepare for next development iteration"
