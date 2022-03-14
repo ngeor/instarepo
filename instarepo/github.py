@@ -123,9 +123,6 @@ class ReadWriteGitHub(GitHub):
     A read-write GitHub client.
     """
 
-    def __init__(self, auth):
-        super().__init__(auth)
-
     def create_merge_request(
         self, full_name: str, head: str, base: str, title: str, body: str
     ) -> str:

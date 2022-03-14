@@ -375,8 +375,8 @@ usage: instarepo clone [-h] [-u USERNAME] [-t TOKEN]
                        [--only-name-prefix ONLY_NAME_PREFIX | --except-name-prefix EXCEPT_NAME_PREFIX]
                        [--forks {allow,deny,only}]
                        [--pushed-after PUSHED_AFTER]
-                       [--pushed-before PUSHED_BEFORE] --projects-dir
-                       PROJECTS_DIR
+                       [--pushed-before PUSHED_BEFORE]
+                       [--projects-dir PROJECTS_DIR]
 
 optional arguments:
   -h, --help            show this help message and exit

@@ -4,9 +4,10 @@ Fixers regarding CI.
 
 import os.path
 import re
+from string import Template
+
 import instarepo.fixers.base
 import instarepo.fixers.context
-from string import Template
 
 
 class NoTravisFix:

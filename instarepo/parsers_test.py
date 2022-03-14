@@ -2,36 +2,36 @@ from .parsers import any_char, one_char_if, many, word, combine_and
 
 
 def test_any_char():
-    x, y = any_char()("abc")
-    assert x == "a"
-    assert y == "bc"
+    parsed, remaining = any_char()("abc")
+    assert parsed == "a"
+    assert remaining == "bc"
 
 
 def test_one_char_if():
-    x, y = one_char_if(lambda p: p >= "a")("abc")
-    assert x == "a"
-    assert y == "bc"
-    x, y = one_char_if(lambda p: p < "a")("abc")
-    assert x == ""
-    assert y == "abc"
+    parsed, remaining = one_char_if(lambda p: p >= "a")("abc")
+    assert parsed == "a"
+    assert remaining == "bc"
+    parsed, remaining = one_char_if(lambda p: p < "a")("abc")
+    assert parsed == ""
+    assert remaining == "abc"
 
 
 def test_many():
     lower_case_parser = one_char_if(lambda x: x >= "a" and x <= "z")
-    x, y = many(lower_case_parser)("hello world")
-    assert x == "hello"
-    assert y == " world"
+    parsed, remaining = many(lower_case_parser)("hello world")
+    assert parsed == "hello"
+    assert remaining == " world"
 
 
 def test_word():
-    x, y = word()("Hello, world!")
-    assert x == "Hello"
-    assert y == ", world!"
+    parsed, remaining = word()("Hello, world!")
+    assert parsed == "Hello"
+    assert remaining == ", world!"
 
 
 def test_combine_and():
     first = word()
     second = one_char_if(lambda x: x == ",")
-    x, y = combine_and(first, second)("Hello, world!")
-    assert x == "Hello,"
-    assert y == " world!"
+    parsed, remaining = combine_and(first, second)("Hello, world!")
+    assert parsed == "Hello,"
+    assert remaining == " world!"

@@ -214,8 +214,8 @@ class SlnProjectFinder:
         rparen = self._parser.next()
         if rparen != ")":
             return
-        eq = self._parser.next()
-        if eq != "=":
+        eq_sign = self._parser.next()
+        if eq_sign != "=":
             return
         _project_name = self._parser.next()
         comma = self._parser.next()

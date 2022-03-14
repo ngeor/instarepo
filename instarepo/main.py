@@ -185,8 +185,8 @@ def _configure_clone_parser(parser: argparse.ArgumentParser):
     _add_filter_options(parser)
     parser.add_argument(
         "--projects-dir",
-        required=True,
         help="The directory where projects are going to be cloned into",
+        default=".",
     )
 
 
