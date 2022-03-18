@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2022-03-18
+
+### Dependencies
+
+- Update dependency pytest to v7.1.0
+- Update dependency pytest to v7.1.1
+
+### Features
+
+- Ability to overwrite certain files
+- Projects-dir parameter of clone should default to current directory (Fixes #48)
+
+### Miscellaneous Tasks
+
+- Added script to auto-generate README file
+- Removed pre-release support
+
 ## [0.12.0] - 2022-03-12
 
 ### Bug Fixes
