@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.14.0] - 2022-03-18
+
+### Features
+
+- Use custom author name, start from scratch if all commits are from instarepo (Fixes #54)
+
 ## [0.13.0] - 2022-03-18
 
 ### Dependencies
