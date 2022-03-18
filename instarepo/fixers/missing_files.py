@@ -1,9 +1,7 @@
 import requests
-import instarepo.fixers.context
-import instarepo.git
-import instarepo.github
 from instarepo.fixers.base import MissingFileFix
 from .finders import is_lazarus_project, is_maven_project, is_vb6_project
+from .naming import fixer_class_to_fixer_key
 
 
 class MustHaveReadmeFix(MissingFileFix):
@@ -13,18 +11,19 @@ class MustHaveReadmeFix(MissingFileFix):
     Does not run for locally checked out repositories.
     """
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, "README.md")
-        self.repo = context.repo
+    def get_filename(self):
+        return "README.md"
 
     def get_contents(self):
-        contents = f"# {self.repo.name}\n"
-        if self.repo.description:
-            contents = contents + "\n" + self.repo.description + "\n"
+        repo = self.context.repo
+        contents = f"# {repo.name}\n"
+        if repo.description:
+            contents = contents + "\n" + repo.description + "\n"
         return contents
 
     def should_process_repo(self) -> bool:
-        return self.repo is not None
+        repo = self.context.repo
+        return repo is not None
 
 
 EDITOR_CONFIG = """# Editor configuration, see https://editorconfig.org
@@ -40,17 +39,25 @@ max_line_length = 120
 
 [*.sh]
 end_of_line = lf
+
+[*.{xml,yml}]
+indent_size = 2
 """
 
 
 class MustHaveEditorConfigFix(MissingFileFix):
     """Ensures an editorconfig file exists"""
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".editorconfig")
+    def get_filename(self):
+        return ".editorconfig"
 
     def get_contents(self):
         return EDITOR_CONFIG
+
+    def should_overwrite(self):
+        return self.context.get_setting(
+            fixer_class_to_fixer_key(self.__class__), "overwrite"
+        )
 
 
 class MustHaveGitHubFundingFix(MissingFileFix):
@@ -61,9 +68,8 @@ class MustHaveGitHubFundingFix(MissingFileFix):
     Does not run for locally checked out repositories.
     """
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".github/FUNDING.yml")
-        self.context = context
+    def get_filename(self):
+        return ".github/FUNDING.yml"
 
     def should_process_repo(self):
         return (
@@ -100,19 +106,24 @@ backup/
 *.vbw
 """
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".gitignore")
+    def get_filename(self):
+        return ".gitignore"
 
     def get_contents(self):
-        if is_maven_project(self.git.dir):
+        if is_maven_project(self.context.git.dir):
             # https://github.com/github/gitignore/blob/master/Maven.gitignore
             response = requests.get(
                 "https://raw.githubusercontent.com/github/gitignore/master/Maven.gitignore"
             )
             response.raise_for_status()
             return response.text
-        if is_lazarus_project(self.git.dir):
+        if is_lazarus_project(self.context.git.dir):
             return self.LAZARUS_GITIGNORE
-        if is_vb6_project(self.git.dir):
+        if is_vb6_project(self.context.git.dir):
             return self.VB6_GITIGNORE
         return None
+
+    def should_overwrite(self):
+        return self.context.get_setting(
+            fixer_class_to_fixer_key(self.__class__), "overwrite"
+        )

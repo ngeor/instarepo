@@ -89,15 +89,15 @@ class MustHaveLicenseFix(MissingFileFix):
     Does not run for forks, private repos, and local git repos.
     """
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, "LICENSE")
-        self.repo = context.repo
+    def get_filename(self):
+        return "LICENSE"
 
     def should_process_repo(self):
-        return self.repo and not self.repo.private and not self.repo.fork
+        repo = self.context.repo
+        return repo and not repo.private and not repo.fork
 
     def get_contents(self):
         contents = MIT_LICENSE.replace(
             "[year]", str(datetime.date.today().year)
-        ).replace("[fullname]", self.git.user_name())
+        ).replace("[fullname]", self.context.git.user_name())
         return contents

@@ -51,12 +51,11 @@ def remove_travis_badge(contents: str) -> str:
 class PythonBuildFix(instarepo.fixers.base.MissingFileFix):
     """Adds a build GitHub action for Python projects"""
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".github/workflows/build.yml")
-        self.context = context
+    def get_filename(self):
+        return ".github/workflows/build.yml"
 
     def get_contents(self) -> str:
-        with open(self.git.join("Pipfile"), "r", encoding="utf-8") as file:
+        with open(self.context.git.join("Pipfile"), "r", encoding="utf-8") as file:
             pipfile_lines = file.readlines()
         has_build_dependency = any(
             filter(lambda line: line.startswith("build"), pipfile_lines)
@@ -130,15 +129,14 @@ jobs:
 """
 
     def should_process_repo(self) -> bool:
-        return self.git.isfile("Pipfile")
+        return self.context.git.isfile("Pipfile")
 
 
 class PythonReleaseFix(instarepo.fixers.base.MissingFileFix):
     """Adds a release GitHub action for Python projects"""
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".github/workflows/release.yml")
-        self.context = context
+    def get_filename(self):
+        return ".github/workflows/release.yml"
 
     def get_contents(self) -> str:
         template = Template(
@@ -185,9 +183,9 @@ jobs:
         )
 
     def should_process_repo(self) -> bool:
-        if not self.git.isfile("Pipfile"):
+        if not self.context.git.isfile("Pipfile"):
             return False
-        with open(self.git.join("Pipfile"), "r", encoding="utf-8") as file:
+        with open(self.context.git.join("Pipfile"), "r", encoding="utf-8") as file:
             pipfile_lines = file.readlines()
         has_twine_dependency = any(
             filter(lambda line: line.startswith("twine"), pipfile_lines)

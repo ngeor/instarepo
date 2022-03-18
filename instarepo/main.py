@@ -147,16 +147,25 @@ def _configure_fix_parser(parser: argparse.ArgumentParser):
         help="Apply fixes for a project at a local working directory. Skips all GitHub related calls and git push.",
     )
     parser.add_argument(
-        "--auto-merge",
-        action="store_true",
-        default=False,
-        help="Automatically merge open MRs that pass CI.",
-    )
-    parser.add_argument(
         "-c",
         "--config-file",
         required=False,
         help="The location of an optional configuration file",
+    )
+    auto_group = parser.add_mutually_exclusive_group()
+    auto_group.add_argument(
+        "-a",
+        "--auto-merge",
+        action="store_true",
+        default=False,
+        help="Automatically merge open MRs that pass CI",
+    )
+    auto_group.add_argument(
+        "-f",
+        "--force",
+        required=False,
+        action="store_true",
+        help="Disregard existing instarepo MRs and start from scratch",
     )
 
 

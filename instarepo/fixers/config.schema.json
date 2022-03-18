@@ -25,6 +25,39 @@
                 "cliff.toml": {
                     "description": "Location of the cliff.toml file",
                     "type": "string"
+                },
+                "dotnet.must_have_ci": {
+                    "description": "Configuration for the missing_files.must_have_editor_config fixer",
+                    "type": "object",
+                    "properties": {
+                        "overwrite": {
+                            "description": "Should the existing files be overwritten or not",
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "missing_files.must_have_editor_config": {
+                    "description": "Configuration for the missing_files.must_have_editor_config fixer",
+                    "type": "object",
+                    "properties": {
+                        "overwrite": {
+                            "description": "Should the existing files be overwritten or not",
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "missing_files.must_have_git_ignore": {
+                    "description": "Configuration for the missing_files.must_have_git_ignore fixer",
+                    "type": "object",
+                    "properties": {
+                        "overwrite": {
+                            "description": "Should the existing files be overwritten or not",
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "required": [],

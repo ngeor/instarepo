@@ -49,12 +49,11 @@ jobs:
 class MustHaveCIFix(MissingFileFix):
     """If missing, adds a GitHub action Maven build workflow"""
 
-    def __init__(self, context: instarepo.fixers.context.Context):
-        super().__init__(context.git, ".github/workflows/maven.yml")
-        self.context = context
+    def get_filename(self):
+        return ".github/workflows/maven.yml"
 
     def should_process_repo(self):
-        return is_maven_project(self.git.dir)
+        return is_maven_project(self.context.git.dir)
 
     def get_contents(self):
         return MAVEN_YML.replace("trunk", self.context.default_branch())

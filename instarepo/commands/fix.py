@@ -4,26 +4,18 @@ or remote on GitHub.
 """
 import logging
 import tempfile
-from typing import Iterable, List
+from typing import Iterable
 
 import instarepo.git
 import instarepo.github
 import instarepo.repo_source
-import instarepo.fixers.base
-import instarepo.fixers.changelog
-import instarepo.fixers.ci
-import instarepo.fixers.config
-import instarepo.fixers.context
-import instarepo.fixers.dotnet
-import instarepo.fixers.license
-import instarepo.fixers.maven
-import instarepo.fixers.missing_files
-import instarepo.fixers.pascal
-import instarepo.fixers.readme
-import instarepo.fixers.repo_description
-import instarepo.fixers.vb6
 
 from ..credentials import build_requests_auth
+from ..fixers.discovery import (
+    all_fixer_classes,
+    select_fixer_classes,
+)
+from ..fixers.naming import fixer_class_to_fixer_key
 
 
 class FixCommand:
@@ -104,6 +96,7 @@ class FixRemote(FixBase):
         else:
             self.github = instarepo.github.ReadWriteGitHub(auth=auth)
         self.auto_merge = args.auto_merge
+        self.force = args.force
         self.repo_source = (
             instarepo.repo_source.RepoSourceBuilder()
             .with_github(self.github)
@@ -142,7 +135,7 @@ class FixRemote(FixBase):
                 ahead,
                 repo.default_branch,
             )
-            if behind > 0:
+            if behind > 0 or self.force:
                 logging.info(
                     "Remote branch is behind default branch, starting from scratch"
                 )
@@ -311,145 +304,3 @@ def epilog():
         result += clz.__doc__
         result += "\n"
     return result
-
-
-def try_get_fixer_order(fixer_class):
-    return fixer_class.order if hasattr(fixer_class, "order") else 0
-
-
-FIXER_PREFIX = "instarepo.fixers."
-FIXER_SUFFIX = "Fix"
-
-
-def fixer_class_to_fixer_key(clz):
-    """
-    Derives the unique fixer identifier out of a fixer class.
-    The identifier is shorter and can be used to dynamically
-    turn fixers on/off via the CLI.
-    """
-    full_module_name: str = clz.__module__
-    expected_prefix = FIXER_PREFIX
-    if not full_module_name.startswith(expected_prefix):
-        raise ValueError(
-            f"Module {full_module_name} did not start with prefix {expected_prefix}"
-        )
-    expected_suffix = FIXER_SUFFIX
-    if not clz.__name__.endswith(expected_suffix):
-        raise ValueError(
-            f"Module {clz.__name__} did not end with suffix {expected_suffix}"
-        )
-    my_module = full_module_name[len(expected_prefix) :]
-    return (
-        my_module
-        + "."
-        + _pascal_case_to_underscore_case(clz.__name__[0 : -len(expected_suffix)])
-    )
-
-
-def _pascal_case_to_underscore_case(value: str) -> str:
-    """
-    Converts a pascal case string (e.g. MyClass)
-    into a lower case underscore separated string (e.g. my_class).
-    """
-    result = ""
-    state = "initial"
-    partial = ""
-    for char in value:
-        if "A" <= char <= "Z":
-            if state == "initial":
-                state = "upper"
-            elif state == "upper":
-                state = "multi-upper"
-            else:
-                if result:
-                    result += "_"
-                result += partial
-                partial = ""
-                state = "upper"
-            partial += char.lower()
-        else:
-            if state == "multi-upper":
-                if result:
-                    result += "_"
-                result += partial
-                partial = ""
-            partial += char
-            state = "lower"
-
-    if result:
-        result += "_"
-    result += partial
-    return result
-
-
-def select_fixer_classes(
-    only_fixers: List[str] = None, except_fixers: List[str] = None
-):
-    if only_fixers:
-        if except_fixers:
-            raise ValueError("Cannot use only_fixers and except_fixers together")
-        unsorted_iterable = filter(
-            lambda fixer_class: _fixer_class_starts_with_prefix(
-                fixer_class, only_fixers
-            ),
-            all_fixer_classes(),
-        )
-    elif except_fixers:
-        unsorted_iterable = filter(
-            lambda fixer_class: not _fixer_class_starts_with_prefix(
-                fixer_class, except_fixers
-            ),
-            all_fixer_classes(),
-        )
-    else:
-        unsorted_iterable = all_fixer_classes()
-    result = list(unsorted_iterable)
-    result.sort(key=try_get_fixer_order)
-    return result
-
-
-def _fixer_class_starts_with_prefix(fixer_class, prefixes: List[str]):
-    """
-    Checks if the friendly name of the given fixer class starts with any of the given prefixes.
-    """
-    fixer_key = fixer_class_to_fixer_key(fixer_class)
-    for prefix in prefixes:
-        if fixer_key.startswith(prefix):
-            return True
-    return False
-
-
-def all_fixer_classes():
-    """Gets all fixer classes"""
-    my_modules = [
-        instarepo.fixers.changelog,
-        instarepo.fixers.ci,
-        instarepo.fixers.dotnet,
-        instarepo.fixers.license,
-        instarepo.fixers.maven,
-        instarepo.fixers.missing_files,
-        instarepo.fixers.pascal,
-        instarepo.fixers.readme,
-        instarepo.fixers.repo_description,
-        instarepo.fixers.vb6,
-    ]
-    for my_module in my_modules:
-        my_classes = classes_in_module(my_module)
-        for clz in my_classes:
-            if clz.__name__.endswith(FIXER_SUFFIX):
-                yield clz
-
-
-def classes_in_module(module):
-    """
-    Gets the classes defined in the given module
-    """
-    module_dict = module.__dict__
-    return (
-        module_dict[c]
-        for c in module_dict
-        if (
-            isinstance(module_dict[c], type)
-            and module_dict[c].__module__ == module.__name__
-        )
-    )

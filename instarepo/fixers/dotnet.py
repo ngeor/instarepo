@@ -11,6 +11,7 @@ import instarepo.github
 import instarepo.xml_utils
 from .base import ensure_directories
 from .finders import is_file_of_extension
+from .naming import fixer_class_to_fixer_key
 from ..parsers import (
     many,
     combine_or,
@@ -70,7 +71,9 @@ class MustHaveCIFix:
                 old_contents = file.read()
         else:
             old_contents = ""
-        if expected_contents != old_contents:
+        if not old_contents or (
+            (expected_contents != old_contents) and self._can_overwrite()
+        ):
             with open(absolute_file_name, "w", encoding="utf-8") as file:
                 file.write(expected_contents)
             self.context.git.add(file_name)
@@ -98,6 +101,11 @@ class MustHaveCIFix:
             self.context.git.rm("appveyor.yml")
             return True
         return False
+
+    def _can_overwrite(self):
+        return self.context.get_setting(
+            fixer_class_to_fixer_key(self.__class__), "overwrite"
+        )
 
 
 def get_linux_workflow_contents(default_branch: str, artifact_path: str):

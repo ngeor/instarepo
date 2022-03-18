@@ -47,8 +47,8 @@ class Context:
             )
         return result
 
-    def get_setting(self, key: str):
-        return self.config.get_setting(self.full_name(), key)
+    def get_setting(self, *args):
+        return self.config.get_setting(self.full_name(), *args)
 
     @functools.lru_cache()
     def default_branch(self):
