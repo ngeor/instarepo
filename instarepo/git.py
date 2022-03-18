@@ -2,6 +2,10 @@ import datetime
 import os.path
 import subprocess
 
+AUTHOR_NAME = "instarepo"
+AUTHOR_EMAIL = "instarepo@localhost"
+AUTHOR = f"{AUTHOR_NAME} <{AUTHOR_EMAIL}>"
+
 
 class GitWorkingDir:
     def __init__(self, directory: str, quiet: bool = False):
@@ -55,7 +59,7 @@ class GitWorkingDir:
         args = ["git", "commit"]
         if self.quiet:
             args.append("-q")
-        args.extend(["-m", message])
+        args.extend(["-m", message, f'--author="{AUTHOR}"'])
         subprocess.run(args, check=True, cwd=self.dir)
 
     def push(self, force: bool = False, remote_name: str = "origin") -> None:
@@ -200,6 +204,18 @@ class GitWorkingDir:
         )
         output = result.stdout.strip()
         return output[len(prefix) :]
+
+    def get_author_names(self, branch_name):
+        # git log trunk..HEAD --pretty=%an
+        default_branch = self.get_default_branch()
+        result = subprocess.run(
+            ["git", "log", f"{default_branch}..{branch_name}", "--pretty=%an"],
+            check=True,
+            cwd=self.dir,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+        )
+        return result.stdout.splitlines()
 
 
 def clone(ssh_url: str, clone_dir: str, quiet: bool = False) -> GitWorkingDir:

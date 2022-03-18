@@ -87,7 +87,9 @@ def test_commit(mocker: MockerFixture):
 
     # assert
     mock.assert_called_once_with(
-        ["git", "commit", "-m", "oops"], check=True, cwd="/tmp/hello"
+        ["git", "commit", "-m", "oops", '--author="instarepo <instarepo@localhost>"'],
+        check=True,
+        cwd="/tmp/hello",
     )
 
 
@@ -101,7 +103,16 @@ def test_commit_quietly(mocker: MockerFixture):
 
     # assert
     mock.assert_called_once_with(
-        ["git", "commit", "-q", "-m", "oops"], check=True, cwd="/tmp/hello"
+        [
+            "git",
+            "commit",
+            "-q",
+            "-m",
+            "oops",
+            '--author="instarepo <instarepo@localhost>"',
+        ],
+        check=True,
+        cwd="/tmp/hello",
     )
 
 

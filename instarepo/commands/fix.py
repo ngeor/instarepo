@@ -135,10 +135,7 @@ class FixRemote(FixBase):
                 ahead,
                 repo.default_branch,
             )
-            if behind > 0 or self.force:
-                logging.info(
-                    "Remote branch is behind default branch, starting from scratch"
-                )
+            if self._should_start_from_scratch(behind, ahead, git):
                 git.create_branch(BRANCH_NAME)
                 needs_force_push = True
                 behind = 0
@@ -259,6 +256,37 @@ class FixRemote(FixBase):
 
         self.github.merge_merge_request(repo.full_name, number)
         return True
+
+    def _should_start_from_scratch(
+        self, behind, ahead, git: instarepo.git.GitWorkingDir
+    ):
+        if self.force:
+            logging.info("Force flag is set, starting branch from scratch")
+            return True
+        if behind > 0:
+            logging.info(
+                "Remote branch is behind default branch, starting from scratch"
+            )
+            return True
+        if ahead > 0:
+            author_names = git.get_author_names(f"origin/{BRANCH_NAME}")
+            if len(author_names) != ahead:
+                logging.warning(
+                    "Found %d author names but expected %d", len(author_names), ahead
+                )
+                return False
+            has_custom_authors = any(
+                filter(lambda x: x != instarepo.git.AUTHOR_NAME, author_names)
+            )
+            if has_custom_authors:
+                logging.info(
+                    "Found commits by different authors, keeping existing branch"
+                )
+                return False
+            logging.info("All commits are from instarepo, starting from scratch")
+            return True
+        logging.info("Existing branch has no commits")
+        return False
 
 
 def create_composite_fixer(fixer_classes, context: instarepo.fixers.context.Context):
