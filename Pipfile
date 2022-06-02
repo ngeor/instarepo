@@ -12,7 +12,7 @@ black = "==22.3.0"
 pytest-mock = "==3.7.0"
 pylint = "==2.13.9"
 build = "==0.8.0"
-twine = "==4.0.0"
+twine = "==4.0.1"
 
 [requires]
 python_version = "3"
